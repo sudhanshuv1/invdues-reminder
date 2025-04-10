@@ -69,13 +69,15 @@ export const apiSlice = createApi({
       query: (invoice) => ({
         url: '/invoice',
         method: 'POST',
-        body: invoice, // { userId, clientName, clientEmail, amount, dueDate, status }
+        body: invoice, // Include userId in the request body
       }),
     }),
 
     // Get all invoices for a user
     getInvoices: builder.query({
-      query: () => '/invoice',
+      query: () => ({
+        url: `/invoice`, // Include userId as a query parameter
+      }),
     }),
 
     // Update an invoice by ID
@@ -83,7 +85,7 @@ export const apiSlice = createApi({
       query: ({ id, updates }) => ({
         url: `/invoice/${id}`,
         method: 'PATCH',
-        body: updates, // e.g., { status: 'paid' }
+        body: updates, // Include userId in the request body
       }),
     }),
 

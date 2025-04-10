@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCreateInvoiceMutation } from '../features/apiSlice';
+import { useSelector } from 'react-redux';
+import { selectCurrentUser } from '../features/authSlice';
 
 const CreateInvoice = () => {
   const [clientName, setClientName] = useState('');
@@ -8,11 +11,16 @@ const CreateInvoice = () => {
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('unpaid'); // Default status
   const [createInvoice, { isLoading, error }] = useCreateInvoiceMutation();
+  const navigate = useNavigate();
+
+  // Get the current user from the Redux store
+  const user = useSelector(selectCurrentUser);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const invoiceData = {
+        userId: user._id, // Include userId from the Redux state
         clientName,
         clientEmail,
         amount,
@@ -20,11 +28,12 @@ const CreateInvoice = () => {
         status,
       };
 
-      const response = await createInvoice(invoiceData).unwrap();
-      console.log('Invoice created successfully:', response);
+      // Create the invoice using the API
+      await createInvoice(invoiceData).unwrap();
+      console.log('Invoice created successfully');
 
       // Redirect to the dashboard
-      window.location.href = '/dashboard';
+      navigate('/dashboard');
     } catch (err) {
       console.error('Failed to create invoice:', err);
     }
@@ -37,11 +46,9 @@ const CreateInvoice = () => {
         onSubmit={handleSubmit}
         className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-sm"
       >
+        {/* Form Fields */}
         <div className="mb-4">
-          <label
-            htmlFor="clientName"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
+          <label htmlFor="clientName" className="block text-gray-700 text-sm font-bold mb-2">
             Client Name
           </label>
           <input
@@ -55,10 +62,7 @@ const CreateInvoice = () => {
           />
         </div>
         <div className="mb-4">
-          <label
-            htmlFor="clientEmail"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
+          <label htmlFor="clientEmail" className="block text-gray-700 text-sm font-bold mb-2">
             Client Email
           </label>
           <input
@@ -72,10 +76,7 @@ const CreateInvoice = () => {
           />
         </div>
         <div className="mb-4">
-          <label
-            htmlFor="amount"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
+          <label htmlFor="amount" className="block text-gray-700 text-sm font-bold mb-2">
             Amount
           </label>
           <input
@@ -89,10 +90,7 @@ const CreateInvoice = () => {
           />
         </div>
         <div className="mb-4">
-          <label
-            htmlFor="dueDate"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
+          <label htmlFor="dueDate" className="block text-gray-700 text-sm font-bold mb-2">
             Due Date
           </label>
           <input
@@ -105,10 +103,7 @@ const CreateInvoice = () => {
           />
         </div>
         <div className="mb-6">
-          <label
-            htmlFor="status"
-            className="block text-gray-700 text-sm font-bold mb-2"
-          >
+          <label htmlFor="status" className="block text-gray-700 text-sm font-bold mb-2">
             Status
           </label>
           <select

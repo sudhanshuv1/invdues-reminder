@@ -62,7 +62,7 @@ const Header = () => {
                 className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg"
                 title={user.name}
               >
-                {user.name.charAt(0).toUpperCase()}
+                {user.displayName.charAt(0).toUpperCase()}
               </div>
             </div>
           )}

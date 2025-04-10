@@ -11,7 +11,8 @@ const verifyJWT = (req, res, next) => {
     if (err) {
       return res.status(401).json({ message: 'Invalid token.' });
     }
-    req.user = decoded; // Attach user data to the request
+    console.log('Decoded token:', decoded);
+    req.user = decoded.User; // Attach user data to the request
     next();
   });
 };

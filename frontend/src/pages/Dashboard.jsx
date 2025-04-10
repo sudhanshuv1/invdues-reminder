@@ -1,15 +1,31 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { selectInvoices, selectIsLoading, selectError, setInvoices } from '../features/invoiceSlice';
 import { useGetInvoicesQuery } from '../features/apiSlice';
 import Invoice from '../components/Invoice';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
-  const { data: invoices, isLoading, error } = useGetInvoicesQuery();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  // Get invoices state from Redux
+  const invoices = useSelector(selectInvoices);
+  const isLoading = useSelector(selectIsLoading);
+  const error = useSelector(selectError);
+
+  // Fetch invoices using RTK Query
+  const { data: fetchedInvoices = [], isFetching, error: fetchError } = useGetInvoicesQuery();
+
+  // Sync fetched invoices with Redux state
+  useEffect(() => {
+    if (!isFetching && fetchedInvoices.length > 0) {
+      dispatch(setInvoices(fetchedInvoices));
+    }
+  }, [fetchedInvoices, isFetching, dispatch]);
 
   const handleEdit = (invoice) => {
     console.log('Edit invoice:', invoice);
-    // Redirect to edit page or open a modal with invoice details
     navigate(`/edit-invoice/${invoice._id}`, { state: { invoice } });
   };
 
@@ -29,17 +45,16 @@ const Dashboard = () => {
         </button>
       </div>
       {isLoading && <p>Loading invoices...</p>}
-      {error && <p className="text-red-500">Error loading invoices: {error.data?.message}</p>}
-      {invoices && invoices.length === 0 && (
+      {fetchError && <p className="text-red-500">Error loading invoices: {fetchError.message}</p>}
+      {invoices.length === 0 && !isLoading && (
         <p className="text-gray-600 text-lg font-semibold mt-10">
           You have no invoices.
         </p>
       )}
       <div className="flex flex-wrap gap-4 justify-center md:justify-start w-full">
-        {invoices &&
-          invoices.map((invoice) => (
-            <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} />
-          ))}
+        {invoices.map((invoice) => (
+          <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} />
+        ))}
       </div>
     </div>
   );

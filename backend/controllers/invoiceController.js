@@ -4,7 +4,7 @@ const Invoice = require('../models/Invoice'); // Import the Invoice model
 const createInvoice = async (req, res) => {
   try {
     const { userId, clientName, clientEmail, amount, dueDate, status } = req.body;
-
+    console.log('Creating invoice with data:', req.body);
     const newInvoice = new Invoice({
       userId,
       clientName,
@@ -25,7 +25,9 @@ const createInvoice = async (req, res) => {
 const getInvoices = async (req, res) => {
   try {
     const userId = req.user.id; // Assuming user ID is attached to the request (via authentication middleware)
+    console.log('Fetching invoices for user:', userId);
     const invoices = await Invoice.find({ userId });
+    console.log('Invoices found:', invoices);
     res.status(200).json(invoices);
   } catch (error) {
     res.status(500).json({ message: 'Failed to retrieve invoices', error: error.message });
