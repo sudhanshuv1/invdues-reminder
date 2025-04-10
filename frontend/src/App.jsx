@@ -8,6 +8,8 @@ import Pricing from './pages/Pricing';
 import Contact from './pages/Contact';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
+import Dashboard from './pages/Dashboard';
+import CreateInvoice from './pages/CreateInvoice';
 
 function App() {
   return (
@@ -22,6 +24,11 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/signin" element={<SignIn />} />
             <Route path="/signup" element={<SignUp />} />
+            <Route path="/dashboard">
+              <Route index element={<Dashboard />} />
+              <Route path="new-invoice" element={<CreateInvoice />} />
+            </Route>
+            <Route path="/dashboard" element={<Dashboard />} />
           </Routes>
 
         {/* Footer */}

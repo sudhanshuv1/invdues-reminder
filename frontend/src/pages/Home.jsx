@@ -3,9 +3,9 @@ import { Link } from 'react-router-dom';
 
 const Home = () => {
   return (
-    <div className="flex flex-col flex-grow items-center justify-center h-full bg-gray-100 px-4">
+    <div className="flex flex-col flex-grow items-center justify-center h-full bg-gray-100 px-4 overflow-scroll">
       <h1 className="text-4xl font-bold mb-4 text-center">
-        Welcome to Invoice Reminder
+        Welcome to Invoice-Dues Reminder
       </h1>
       <p className="text-lg text-gray-600 text-center mb-6">
         Manage your invoices and follow-ups effortlessly.

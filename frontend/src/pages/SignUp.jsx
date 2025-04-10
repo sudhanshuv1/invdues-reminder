@@ -1,23 +1,34 @@
 import React, { useState } from 'react';
+import { useSignUpMutation } from '../features/apiSlice';
 
 const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [signUp, { isLoading, error }] = useSignUpMutation();
 
-  const handleEmailSignUp = (e) => {
+  const handleEmailSignUp = async (e) => {
     e.preventDefault();
-    // Add logic to handle email/password sign-up
-    console.log('Name:', name, 'Email:', email, 'Password:', password);
+    try {
+      const response = await signUp({ displayName: name, email, password }).unwrap();
+      console.log('User signed up successfully:', response);
+
+      // Redirect the user to the dashboard or login page
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error('Sign up failed:', err);
+    }
   };
 
   const handleGoogleSignUp = () => {
-    // Redirect to Google OAuth endpoint
-    window.location.href = '/auth/google'; // Replace with your backend Google OAuth endpoint
+    // Redirect to the backend's Google OAuth endpoint
+    const backendUrl = 'http://localhost:5000/auth/google'; // Replace with your backend URL
+    console.log('Redirecting to:', backendUrl);
+    window.location.href = backendUrl;
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100 px-4">
+    <div className="flex flex-col items-center justify-center flex-grow bg-gray-100 px-4">
       <h1 className="text-3xl font-bold mb-6">Sign Up</h1>
       <form
         onSubmit={handleEmailSignUp}
@@ -78,9 +89,11 @@ const SignUp = () => {
           <button
             type="submit"
             className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={isLoading}
           >
             Sign Up
           </button>
+          {error && <p className="text-red-500 text-sm mt-2">{error.data?.message}</p>}
         </div>
       </form>
       <div className="flex flex-col items-center">
