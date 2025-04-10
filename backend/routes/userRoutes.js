@@ -1,12 +1,14 @@
 const express = require('express');
-const profileController = require('../controllers/usersController');
-const verifyJWT = require('../middleware/ensureAuth');
+const usersController = require('../controllers/usersController');
+const verifyJWT = require('../middleware/verifyJWT');
 const router = express.Router();
 
-router.use(ensureAuth); // Protect all routes below this
+router.post('/', usersController.signUp);
 
-router.get('/:id', profileController.getUser);
-router.patch('/:id', profileController.updateUser);
-router.delete('/:id', profileController.deleteUser);
+router.use(verifyJWT); // Protect all routes below this
+
+router.get('/:id', usersController.getUser);
+router.patch('/:id', usersController.updateUser);
+router.delete('/:id', usersController.deleteUser);
 
 module.exports = router;

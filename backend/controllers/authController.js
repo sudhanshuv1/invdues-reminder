@@ -41,7 +41,7 @@ const loginWithEmail = async (req, res) => {
             maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         });
 
-        res.json({ accessToken });
+        res.json({ foundUser: foundUser, accessToken: accessToken });
     } catch (error) {
         res.status(500).json({ message: 'Internal server error', error });
     }
