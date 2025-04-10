@@ -34,6 +34,13 @@ export const apiSlice = createApi({
       }),
     }),
 
+    loginWithGoogle: builder.mutation({
+      query: () => ({
+        url: '/auth/google', // Backend route for Google OAuth
+        method: 'GET',
+      }),
+    }),
+
     // Sign up a new user
     signUp: builder.mutation({
       query: (newUser) => ({
@@ -101,6 +108,7 @@ export const apiSlice = createApi({
 
 export const {
   useLoginWithEmailMutation,
+  useLoginWithGoogleMutation,
   useSignUpMutation,
   useDeleteUserMutation,
   useRefreshQuery,

@@ -13,14 +13,10 @@ const CreateInvoice = () => {
   const [createInvoice, { isLoading, error }] = useCreateInvoiceMutation();
   const navigate = useNavigate();
 
-  // Get the current user from the Redux store
-  const user = useSelector(selectCurrentUser);
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
       const invoiceData = {
-        userId: user._id, // Include userId from the Redux state
         clientName,
         clientEmail,
         amount,

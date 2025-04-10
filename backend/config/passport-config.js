@@ -41,7 +41,7 @@ passport.use(
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
       callbackURL: 'http://localhost:5000/auth/google/callback',
     },
-    async (profile, done) => {
+    async (accessToken, refreshToken, profile, done) => {
       try {
         // Check if a user with the Google ID already exists
         let user = await User.findOne({ googleId: profile.id });
@@ -56,6 +56,7 @@ passport.use(
           });
         }
 
+        
         return done(null, user);
       } catch (error) {
         return done(error);

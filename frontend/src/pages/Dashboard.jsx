@@ -1,28 +1,15 @@
-import React, { useEffect } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { selectInvoices, selectIsLoading, selectError, setInvoices } from '../features/invoiceSlice';
+import React, { useState } from 'react';
 import { useGetInvoicesQuery } from '../features/apiSlice';
 import Invoice from '../components/Invoice';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
 
-  // Get invoices state from Redux
-  const invoices = useSelector(selectInvoices);
-  const isLoading = useSelector(selectIsLoading);
-  const error = useSelector(selectError);
+    // Fetch invoices using RTK Query
+    const { data: invoices = [], isLoading, error: fetchError } = useGetInvoicesQuery();
 
-  // Fetch invoices using RTK Query
-  const { data: fetchedInvoices = [], isFetching, error: fetchError } = useGetInvoicesQuery();
 
-  // Sync fetched invoices with Redux state
-  useEffect(() => {
-    if (!isFetching && fetchedInvoices.length > 0) {
-      dispatch(setInvoices(fetchedInvoices));
-    }
-  }, [fetchedInvoices, isFetching, dispatch]);
 
   const handleEdit = (invoice) => {
     console.log('Edit invoice:', invoice);

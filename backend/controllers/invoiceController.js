@@ -3,10 +3,10 @@ const Invoice = require('../models/Invoice'); // Import the Invoice model
 // Create a new Invoice
 const createInvoice = async (req, res) => {
   try {
-    const { userId, clientName, clientEmail, amount, dueDate, status } = req.body;
+    const { clientName, clientEmail, amount, dueDate, status } = req.body;
     console.log('Creating invoice with data:', req.body);
     const newInvoice = new Invoice({
-      userId,
+      userId: req.user.id,
       clientName,
       clientEmail,
       amount,

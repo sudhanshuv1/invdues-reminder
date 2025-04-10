@@ -52,30 +52,32 @@ const loginWithEmail = async (req, res) => {
 // @access Public
 const loginWithGoogle = async (req, res) => {
     try {
-        const user = req.user; // Passport attaches the authenticated user to req.user
-
-        const payload = {
-            User: {
-                id: user.id,
-                email: user.email,
-            },
-        };
-
-        const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-        const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-
-        res.cookie('refreshToken', refreshToken, {
-            httpOnly: true,
-            sameSite: 'None',
-            secure: true,
-            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-        });
-
-        res.json({ accessToken });
+      const user = req.user; // Passport attaches the authenticated user to req.user
+  
+      const payload = {
+        User: {
+          id: user.id,
+          email: user.email,
+        },
+      };
+  
+      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
+      const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
+  
+      // Set the refresh token as an HTTP-only cookie
+      res.cookie('refreshToken', refreshToken, {
+        httpOnly: true,
+        sameSite: 'None',
+        secure: true,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+  
+      // Redirect to the frontend with the access token
+     res.redirect(`http://localhost:5173/signin?accessToken=${accessToken}&name=${encodeURIComponent(user.displayName)}`);
     } catch (error) {
-        res.status(500).json({ message: 'Internal server error', error });
+      res.status(500).json({ message: 'Internal server error', error });
     }
-};
+  };
 
 // @desc Refresh Token
 // @route POST /auth/refresh

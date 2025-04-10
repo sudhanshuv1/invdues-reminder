@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useLoginWithEmailMutation } from '../features/apiSlice';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../features/authSlice';
@@ -30,35 +31,26 @@ const SignIn = () => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      // Redirect to the backend's Google OAuth route
-      const backendUrl = 'http://localhost:5000/auth/google'; // Replace with your backend URL
-      const response = await fetch(backendUrl, {
-        method: 'GET',
-        credentials: 'include', // Include cookies for refresh token
-      });
+  const navigate = useNavigate();
 
-      if (response.ok) {
-        const data = await response.json(); // Parse the JSON response
-        console.log('Google login successful:', data);
+  useEffect(() => {
+    // Check if the URL contains an accessToken query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('accessToken');
+    const name = urlParams.get('name');
 
-        // Dispatch action to set credentials in Redux store
-        dispatch(
-          setCredentials({
-            user: data.user, // Assuming the response contains user info
-            accessToken: data.accessToken,
-          })
-        );
-
-        // Redirect the user to the dashboard
-        window.location.href = '/dashboard';
-      } else {
-        console.error('Google login failed:', response.statusText);
-      }
-    } catch (err) {
-      console.error('Error during Google login:', err);
+    if (accessToken && name) {
+      // Save the access token in localStorage
+      localStorage.setItem('accessToken', accessToken);
+      localStorage.setItem('user', JSON.stringify({ displayName: name }));
+      // Redirect to the dashboard
+      navigate('/dashboard');
     }
+  }, [navigate]);
+
+  const handleGoogleSignIn = () => {
+    // Redirect to the backend's Google OAuth route
+    window.location.href = 'http://localhost:5000/auth/google'; // Replace with your backend URL
   };
 
   return (
