@@ -1,31 +1,70 @@
-import React, { useState } from 'react';
-import { useSignUpMutation } from '../features/apiSlice';
+import React, { useState, useEffect } from 'react';
+import { useSignUpMutation, useLoginWithEmailMutation } from '../features/apiSlice';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../features/authSlice';
+import { useNavigate } from 'react-router-dom';
 
 const SignUp = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [signUp, { isLoading, error }] = useSignUpMutation();
+  const [loginWithEmail] = useLoginWithEmailMutation();
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
     try {
-      const response = await signUp({ displayName: name, email, password }).unwrap();
-      console.log('User signed up successfully:', response);
+      // Sign up the user
+      const signUpResponse = await signUp({ displayName: name, email, password }).unwrap();
+      console.log('User signed up successfully:', signUpResponse);
 
-      // Redirect the user to the dashboard or login page
+      // Automatically sign in the user
+      const loginResponse = await loginWithEmail({ email, password }).unwrap();
+      console.log('User logged in successfully:', loginResponse);
+
+      // Save credentials in Redux and localStorage
+      dispatch(
+        setCredentials({
+          user: loginResponse.foundUser, // Assuming the response contains user info
+          accessToken: loginResponse.accessToken,
+        })
+      );
+      localStorage.setItem('accessToken', loginResponse.accessToken);
+      localStorage.setItem('user', JSON.stringify(loginResponse.foundUser));
+
+      // Redirect to the dashboard
       window.location.href = '/dashboard';
     } catch (err) {
-      console.error('Sign up failed:', err);
+      console.error('Sign up or login failed:', err);
     }
   };
 
   const handleGoogleSignUp = () => {
-    // Redirect to the backend's Google OAuth endpoint
-    const backendUrl = 'http://localhost:5000/auth/google'; // Replace with your backend URL
-    console.log('Redirecting to:', backendUrl);
-    window.location.href = backendUrl;
+    window.location.href = 'https://invdues-backend.onrender.com/auth/google'; // Replace with your backend URL
   };
+
+    useEffect(() => {
+      // Check if the URL contains an accessToken query parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const accessToken = urlParams.get('accessToken');
+      const name = urlParams.get('name');
+  
+      if (accessToken && name) {
+        // Save the access token in localStorage
+        localStorage.setItem('accessToken', accessToken);
+        localStorage.setItem('user', JSON.stringify({ displayName: name }));
+        // Redirect to the dashboard
+        dispatch(
+          setCredentials({
+            user: { displayName: name }, 
+            accessToken: accessToken,
+          })
+        );
+        navigate('/dashboard');
+      }
+    }, [navigate]);
 
   return (
     <div className="flex flex-col items-center justify-center flex-grow bg-gray-100 px-4">
@@ -88,7 +127,7 @@ const SignUp = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             disabled={isLoading}
           >
             Sign Up
@@ -100,7 +139,7 @@ const SignUp = () => {
         <p className="text-gray-600 mb-4">Or sign up with</p>
         <button
           onClick={handleGoogleSignUp}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-red-500 hover:cursor-pointer hover:bg-red-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Sign Up with Google
         </button>

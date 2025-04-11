@@ -1,13 +1,15 @@
 import React from 'react';
 import { useDeleteInvoiceMutation } from '../features/apiSlice';
 
-const Invoice = ({ invoice, onEdit }) => {
+const Invoice = ({ invoice, onEdit, refetch }) => {
   const [deleteInvoice, { isLoading }] = useDeleteInvoiceMutation();
 
   const handleDelete = async () => {
     try {
       await deleteInvoice(invoice._id).unwrap();
       console.log('Invoice deleted successfully');
+      // Refetch invoices after deletion
+      refetch();
     } catch (err) {
       console.error('Failed to delete invoice:', err);
     }
@@ -27,13 +29,13 @@ const Invoice = ({ invoice, onEdit }) => {
       <div className="flex space-x-4">
         <button
           onClick={() => onEdit(invoice)}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-blue-500 hover:bg-blue-700 hover:cursor-pointer text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Edit
         </button>
         <button
           onClick={handleDelete}
-          className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-red-500 hover:bg-red-700 text-white hover:cursor-pointer font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           disabled={isLoading}
         >
           Delete

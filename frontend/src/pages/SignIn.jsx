@@ -44,13 +44,19 @@ const SignIn = () => {
       localStorage.setItem('accessToken', accessToken);
       localStorage.setItem('user', JSON.stringify({ displayName: name }));
       // Redirect to the dashboard
+      dispatch(
+        setCredentials({
+          user: { displayName: name }, 
+          accessToken: accessToken,
+        })
+      );
       navigate('/dashboard');
     }
   }, [navigate]);
 
   const handleGoogleSignIn = () => {
     // Redirect to the backend's Google OAuth route
-    window.location.href = 'http://localhost:5000/auth/google'; // Replace with your backend URL
+    window.location.href = 'https://invdues-backend.onrender.com/auth/google'; // Replace with your backend URL
   };
 
   return (
@@ -97,7 +103,7 @@ const SignIn = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-blue-500 hover:bg-blue-700 hover:cursor-pointer text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             disabled={isLoading}
           >
             Sign In
@@ -109,7 +115,7 @@ const SignIn = () => {
         <p className="text-gray-600 mb-4">Or sign in with</p>
         <button
           onClick={handleGoogleSignIn}
-          className="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-red-500 hover:bg-red-600 hover:cursor-pointer text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Sign In with Google
         </button>

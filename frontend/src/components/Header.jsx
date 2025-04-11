@@ -1,13 +1,30 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { useLogoutMutation } from '../features/apiSlice';
 import { selectCurrentUser, selectIsAuthenticated } from '../features/authSlice';
+import { logout as logoutAction } from '../features/authSlice';
 
 const Header = () => {
-
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const user = useSelector(selectCurrentUser);
+  const [logout] = useLogoutMutation();
   const isAuthenticated = useSelector(selectIsAuthenticated);
-  console.log(user, isAuthenticated);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout().unwrap();
+      // Dispatch logout action to update Redux state
+      dispatch(logoutAction());
+      // Redirect to the sign-in page
+      setIsDropdownOpen(false);
+      navigate('/');
+    } catch (err) {
+      console.error('Logout failed:', err);
+    }
+  };
 
   return (
     <header className="bg-white text-gray-900 shadow-md">
@@ -45,25 +62,39 @@ const Header = () => {
             <>
               <Link
                 to="/signin"
-                className="px-4 py-2 bg-white text-blue-600 rounded-md hover:bg-gray-100"
+                className="px-4 py-2 hover:cursor-pointer bg-white text-blue-600 rounded-md hover:bg-gray-100"
               >
                 Sign In
               </Link>
               <Link
                 to="/signup"
-                className="px-4 py-2 bg-yellow-400 text-blue-600 rounded-md hover:bg-yellow-300"
+                className="px-4 py-2 hover:cursor-pointer bg-yellow-400 text-blue-600 rounded-md hover:bg-yellow-300"
               >
                 Sign Up
               </Link>
             </>
           ) : (
-            <div className="flex items-center space-x-4">
+            <div className="relative">
+              {/* Circular Avatar */}
               <div
-                className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg"
+                className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg cursor-pointer"
                 title={user.name}
+                onClick={() => setIsDropdownOpen((prev) => !prev)}
               >
                 {user.displayName.charAt(0).toUpperCase()}
               </div>
+
+              {/* Dropdown Menu */}
+              {isDropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
+                  <button
+                    onClick={handleLogout}
+                    className="block w-full hover:cursor-pointer text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
