@@ -1,6 +1,6 @@
 # InvDues Reminder
 
-An invoice reminder app and follow-up app that uses Zapier integration to automate workflows. This app is deployed at: https://invdues-reminder.vercel.app/
+An invoice reminder app and follow-up app that uses Zapier integration to automate workflows. It is deployed at: https://invdues-reminder.vercel.app/
 
 This is a MERN stack app that implements:
 - CRUD Operations
