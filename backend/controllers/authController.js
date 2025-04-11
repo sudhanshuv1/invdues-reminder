@@ -73,7 +73,7 @@ const loginWithGoogle = async (req, res) => {
       });
   
       // Redirect to the frontend with the access token
-     res.redirect(`http://localhost:5173/signin?accessToken=${accessToken}&name=${encodeURIComponent(user.displayName)}`);
+     res.redirect(`${process.env.FRONTEND_URL}/signin?accessToken=${accessToken}&name=${encodeURIComponent(user.displayName)}`);
     } catch (error) {
       res.status(500).json({ message: 'Internal server error', error });
     }

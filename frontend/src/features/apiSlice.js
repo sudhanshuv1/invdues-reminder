@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const apiSlice = createApi({
   reducerPath: 'api', // The key for the reducer in the store
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000', // Base URL for all routes
+    baseUrl: 'https://invdues-backend.onrender.com', // Base URL for all routes
     credentials: 'include', // Include cookies for refresh token and session handling
     prepareHeaders: (headers, { endpoint }) => {
       // Add Authorization header for specific endpoints

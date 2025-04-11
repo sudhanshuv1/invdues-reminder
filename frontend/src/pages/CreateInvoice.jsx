@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCreateInvoiceMutation } from '../features/apiSlice';
-import { useSelector } from 'react-redux';
-import { selectCurrentUser } from '../features/authSlice';
 
 const CreateInvoice = () => {
   const [clientName, setClientName] = useState('');
@@ -116,7 +114,7 @@ const CreateInvoice = () => {
         <div className="flex items-center justify-between">
           <button
             type="submit"
-            className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
             disabled={isLoading}
           >
             Create Invoice

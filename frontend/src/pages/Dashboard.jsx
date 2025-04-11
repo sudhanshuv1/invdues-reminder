@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useGetInvoicesQuery } from '../features/apiSlice';
 import Invoice from '../components/Invoice';
 import { useNavigate } from 'react-router-dom';
@@ -6,10 +6,13 @@ import { useNavigate } from 'react-router-dom';
 const Dashboard = () => {
   const navigate = useNavigate();
 
-    // Fetch invoices using RTK Query
-    const { data: invoices = [], isLoading, error: fetchError } = useGetInvoicesQuery();
+  // Fetch invoices using RTK Query
+  const { data: invoices = [], isLoading, error: fetchError, refetch } = useGetInvoicesQuery();
 
-
+  useEffect(() => {
+    // Refetch invoices every time the Dashboard is rendered
+    refetch();
+  }, [refetch]);
 
   const handleEdit = (invoice) => {
     console.log('Edit invoice:', invoice);
@@ -26,7 +29,7 @@ const Dashboard = () => {
         <h1 className="text-3xl font-bold">Dashboard</h1>
         <button
           onClick={handleCreateInvoice}
-          className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
         >
           Create Invoice
         </button>
@@ -40,7 +43,7 @@ const Dashboard = () => {
       )}
       <div className="flex flex-wrap gap-4 justify-center md:justify-start w-full">
         {invoices.map((invoice) => (
-          <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} />
+          <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} refetch={refetch} />
         ))}
       </div>
     </div>
