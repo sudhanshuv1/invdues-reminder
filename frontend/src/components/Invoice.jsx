@@ -8,7 +8,6 @@ const Invoice = ({ invoice, onEdit, refetch }) => {
     try {
       await deleteInvoice(invoice._id).unwrap();
       console.log('Invoice deleted successfully');
-      // Refetch invoices after deletion
       refetch();
     } catch (err) {
       console.error('Failed to delete invoice:', err);

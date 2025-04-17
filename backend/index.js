@@ -21,18 +21,16 @@ app.use(cookieParser());
 
 dbConnect();
 
-// Initialize Passport.js
 app.use(passport.initialize());
-
-
 
 app.use('/auth', require('./routes/authRoutes'));
 app.use('/user', require('./routes/userRoutes'));
 app.use('/invoice', require('./routes/invoiceRoutes'));
 app.use('/reminder', require('./routes/reminderRoutes'));
 
-
-  
+app.get('/', (req, res) => {
+    res.send('<p>API is running...</p>');
+});
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);

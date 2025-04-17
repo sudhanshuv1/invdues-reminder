@@ -12,6 +12,7 @@ router.route('/')
     .get(invoiceController.getInvoices)
 
 router.route('/:id')
+    .get(invoiceController.getInvoiceById)
     .patch(invoiceController.updateInvoice)
     .delete(invoiceController.deleteInvoice);
 
