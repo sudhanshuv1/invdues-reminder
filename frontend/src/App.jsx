@@ -25,6 +25,7 @@ function App() {
             <Route path="dashboard">
               <Route index element={<Dashboard />} />
               <Route path="new-invoice" element={<CreateInvoice />} />
+              <Route path="edit-invoice/:id" element={<CreateInvoice />} />
             </Route>
           </Route>
         </Routes>

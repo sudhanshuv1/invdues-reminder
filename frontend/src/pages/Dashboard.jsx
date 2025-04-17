@@ -16,7 +16,7 @@ const Dashboard = () => {
 
   const handleEdit = (invoice) => {
     console.log('Edit invoice:', invoice);
-    navigate(`/edit-invoice/${invoice._id}`, { state: { invoice } });
+    navigate(`edit-invoice/${invoice._id}`, { state: { invoice } });
   };
 
   const handleCreateInvoice = () => {
@@ -24,9 +24,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start flex-grow overflow-scroll p-4 bg-gray-100">
-      <div className="w-full flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
+    <div className="flex flex-col items-center justify-start flex-grow overflow-scroll p-4 pt-8 bg-gray-200">
+      <div className="w-full flex justify-between my-4 items-center mb-6">
+        <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
           onClick={handleCreateInvoice}
           className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"

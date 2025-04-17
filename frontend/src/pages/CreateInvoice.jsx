@@ -1,15 +1,40 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useCreateInvoiceMutation } from '../features/apiSlice';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
+import { useCreateInvoiceMutation, useGetInvoiceByIdQuery, useUpdateInvoiceMutation } from '../features/apiSlice';
 
 const CreateInvoice = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  // Extract the invoice ID from the pathname if editing
+  const isEditing = location.pathname.includes('edit-invoice');
+  const invoiceId = isEditing ? location.pathname.split('/').pop() : null;
+
+  // Fetch the invoice data if editing
+  const { data: invoice, isLoading: isFetching, error: fetchError } = useGetInvoiceByIdQuery(invoiceId, {
+    skip: !isEditing, // Skip the query if not editing
+  });
+
+  // State for form fields
   const [clientName, setClientName] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [amount, setAmount] = useState('');
   const [dueDate, setDueDate] = useState('');
   const [status, setStatus] = useState('unpaid'); // Default status
-  const [createInvoice, { isLoading, error }] = useCreateInvoiceMutation();
-  const navigate = useNavigate();
+
+  const [createInvoice, { isLoading: isCreating, error: createError }] = useCreateInvoiceMutation();
+  const [updateInvoice, { isLoading: isUpdating, error: updateError }] = useUpdateInvoiceMutation();
+
+  // Populate form fields with invoice data when editing
+  useEffect(() => {
+    if (invoice) {
+      setClientName(invoice.clientName);
+      setClientEmail(invoice.clientEmail);
+      setAmount(invoice.amount);
+      setDueDate(invoice.dueDate.split('T')[0]);
+      setStatus(invoice.status);
+    }
+  }, [invoice]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,20 +47,29 @@ const CreateInvoice = () => {
         status,
       };
 
-      // Create the invoice using the API
-      await createInvoice(invoiceData).unwrap();
-      console.log('Invoice created successfully');
+      if (isEditing) {
+        // Update the invoice if editing
+        await updateInvoice({ id: invoiceId, updates: invoiceData }).unwrap();
+        console.log('Invoice updated successfully');
+      } else {
+        // Create a new invoice if not editing
+        await createInvoice(invoiceData).unwrap();
+        console.log('Invoice created successfully');
+      }
 
       // Redirect to the dashboard
       navigate('/dashboard');
     } catch (err) {
-      console.error('Failed to create invoice:', err);
+      console.error('Failed to save invoice:', err);
     }
   };
 
+  if (isFetching) return <p>Loading invoice details...</p>;
+  if (fetchError) return <p className="text-red-500">Failed to load invoice: {fetchError.message}</p>;
+
   return (
     <div className="flex flex-col items-center justify-center flex-grow overflow-scroll bg-gray-100 px-4">
-      <h1 className="text-3xl font-bold mb-6">Create Invoice</h1>
+      <h1 className="text-3xl font-bold mb-6">{isEditing ? 'Edit Invoice' : 'Create Invoice'}</h1>
       <form
         onSubmit={handleSubmit}
         className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-sm"
@@ -115,11 +149,15 @@ const CreateInvoice = () => {
           <button
             type="submit"
             className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            disabled={isLoading}
+            disabled={isCreating || isUpdating}
           >
-            Create Invoice
+            {isEditing ? 'Update Invoice' : 'Create Invoice'}
           </button>
-          {error && <p className="text-red-500 text-sm mt-2">{error.data?.message}</p>}
+          {(createError || updateError) && (
+            <p className="text-red-500 text-sm mt-2">
+              {createError?.data?.message || updateError?.data?.message}
+            </p>
+          )}
         </div>
       </form>
     </div>

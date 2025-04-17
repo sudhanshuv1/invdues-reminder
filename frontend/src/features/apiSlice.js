@@ -12,6 +12,7 @@ export const apiSlice = createApi({
         if (
           endpoint === 'createInvoice' ||
           endpoint === 'getInvoices' ||
+          endpoint === 'getInvoiceById' ||
           endpoint === 'updateInvoice' ||
           endpoint === 'deleteInvoice' ||
           endpoint === 'logout' ||
@@ -87,6 +88,13 @@ export const apiSlice = createApi({
       }),
     }),
 
+    getInvoiceById: builder.query({
+      query: (id) => ({
+        url: `/invoice/${id}`, // Backend route to fetch a single invoice
+        method: 'GET',
+      }),
+    }),
+
     // Update an invoice by ID
     updateInvoice: builder.mutation({
       query: ({ id, updates }) => ({
@@ -115,6 +123,7 @@ export const {
   useLogoutMutation,
   useCreateInvoiceMutation, // Hook for creating an invoice
   useGetInvoicesQuery, // Hook for fetching invoices
+  useGetInvoiceByIdQuery, // Hook for fetching a single invoice by ID
   useUpdateInvoiceMutation, // Hook for updating an invoice
   useDeleteInvoiceMutation, // Hook for deleting an invoice
 } = apiSlice;

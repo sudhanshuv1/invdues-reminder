@@ -16,9 +16,9 @@ const Header = () => {
   const handleLogout = async () => {
     try {
       await logout().unwrap();
-      // Dispatch logout action to update Redux state
+      
       dispatch(logoutAction());
-      // Redirect to the sign-in page
+      
       setIsDropdownOpen(false);
       navigate('/');
     } catch (err) {
@@ -27,16 +27,16 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-white text-gray-900 shadow-md">
-      <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-        {/* Logo */}
-        <div className="text-2xl font-bold">
+    <header className="bg-white text-gray-900 shadow-lg">
+      <nav className="container mx-auto px-4 py-4 flex shadow-md justify-between items-center">
+        
+        <div className="text-3xl font-bold">
           <Link to="/" className="flex items-center">
             InvDues Reminder
           </Link>
         </div>
 
-        {/* Navbar Links */}
+        
         <div className="hidden md:flex space-x-6 text-lg">
           <Link to="/" className="hover:font-bold relative group">
             Home
@@ -56,7 +56,7 @@ const Header = () => {
           </Link>
         </div>
 
-        {/* Auth Buttons or Profile Avatar */}
+        
         <div className="hidden md:flex space-x-4">
           {!isAuthenticated ? (
             <>
@@ -75,16 +75,16 @@ const Header = () => {
             </>
           ) : (
             <div className="relative">
-              {/* Circular Avatar */}
+              
               <div
-                className="w-10 h-10 bg-blue-500 text-white rounded-full flex items-center justify-center font-bold text-lg cursor-pointer"
+                className="w-10 h-10 bg-blue-500 hover:bg-blue-600 border-gray-600 shadow-md border-1 text-white rounded-full flex items-center justify-center font-bold text-lg cursor-pointer"
                 title={user.name}
                 onClick={() => setIsDropdownOpen((prev) => !prev)}
               >
                 {user.displayName.charAt(0).toUpperCase()}
               </div>
 
-              {/* Dropdown Menu */}
+              
               {isDropdownOpen && (
                 <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg">
                   <button
