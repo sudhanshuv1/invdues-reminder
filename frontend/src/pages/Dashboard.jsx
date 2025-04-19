@@ -24,8 +24,9 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-start flex-grow overflow-scroll p-4 pt-8 bg-gray-200">
-      <div className="w-full flex justify-between my-4 items-center mb-6">
+    <div className="flex flex-col bg-gray-200 h-[calc(100vh-9rem)] md:h-[calc(100vh-9.5rem)] overflow-y-auto">
+      {/* Header Section */}
+      <div className="w-full flex justify-between my-4 items-center px-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <button
           onClick={handleCreateInvoice}
@@ -34,17 +35,21 @@ const Dashboard = () => {
           Create Invoice
         </button>
       </div>
-      {isLoading && <p>Loading invoices...</p>}
-      {fetchError && <p className="text-red-500">Error loading invoices: {fetchError.message}</p>}
-      {invoices.length === 0 && !isLoading && (
-        <p className="text-gray-600 text-lg font-semibold mt-10">
-          You have no invoices.
-        </p>
-      )}
-      <div className="flex flex-wrap gap-4 justify-center md:justify-start w-full">
-        {invoices.map((invoice) => (
-          <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} refetch={refetch} />
-        ))}
+
+      {/* Invoices Section */}
+      <div className="flex-grow overflow-y-auto px-4">
+        {isLoading && <p>Loading invoices...</p>}
+        {fetchError && <p className="text-center text-red-500">Error loading invoices: {fetchError.message}</p>}
+        {invoices.length === 0 && !isLoading && (
+          <p className="text-center text-gray-600 text-lg font-semibold mt-10">
+            You have no invoices.
+          </p>
+        )}
+        <div className="flex flex-wrap gap-4 justify-center md:justify-start">
+          {invoices.map((invoice) => (
+            <Invoice key={invoice._id} invoice={invoice} onEdit={handleEdit} refetch={refetch} />
+          ))}
+        </div>
       </div>
     </div>
   );
