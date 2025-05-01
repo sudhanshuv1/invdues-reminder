@@ -3,10 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useLoginWithEmailMutation } from '../features/apiSlice';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../features/authSlice';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loginWithEmail, { isLoading, error }] = useLoginWithEmailMutation();
   const dispatch = useDispatch();
 
@@ -83,7 +86,7 @@ const SignIn = () => {
             required
           />
         </div>
-        <div className="mb-6">
+        <div className="mb-6 relative">
           <label
             htmlFor="password"
             className="block text-gray-700 text-sm font-bold mb-2"
@@ -91,7 +94,7 @@ const SignIn = () => {
             Password
           </label>
           <input
-            type="password"
+            type={showPassword ? 'text' : 'password'}
             id="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
@@ -99,6 +102,13 @@ const SignIn = () => {
             className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
             required
           />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-2 top-9 hover:cursor-pointer text-gray-400 hover:text-gray-500"
+          >
+            <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+          </button>
         </div>
         <div className="flex items-center justify-between">
           <button
