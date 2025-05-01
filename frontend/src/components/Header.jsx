@@ -8,7 +8,7 @@ import { logout as logoutAction } from '../features/authSlice';
 const Header = () => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const user = useSelector(selectCurrentUser);
-  const [logout] = useLogoutMutation();
+  const [logout, {isLoading}] = useLogoutMutation();
   const isAuthenticated = useSelector(selectIsAuthenticated);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -90,8 +90,9 @@ const Header = () => {
                   <button
                     onClick={handleLogout}
                     className="block w-full hover:cursor-pointer text-left px-4 py-2 text-gray-700 hover:bg-gray-100"
+                    disabled={isLoading}
                   >
-                    Logout
+                    {isLoading ? 'Logging out...' : 'Logout'}
                   </button>
                 </div>
               )}

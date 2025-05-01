@@ -156,7 +156,7 @@ const CreateInvoice = () => {
                 className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
                 disabled={isCreating || isUpdating}
               >
-                {isEditing ? 'Update Invoice' : 'Create Invoice'}
+                {isEditing ? (isUpdating? 'Updating Invoice...' : 'Update Invoice') : isCreating? 'Creating Invoice...' : 'Create Invoice'}
               </button>
               {(createError || updateError) && (
                 <p className="text-red-500 text-sm mt-2">
