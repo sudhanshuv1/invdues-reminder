@@ -37,7 +37,7 @@ const Invoice = ({ invoice, onEdit, refetch }) => {
           className="bg-red-500 hover:bg-red-700 text-white hover:cursor-pointer font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
           disabled={isLoading}
         >
-          Delete
+          {isLoading ? 'Deleting...' : 'Delete'}
         </button>
       </div>
     </div>

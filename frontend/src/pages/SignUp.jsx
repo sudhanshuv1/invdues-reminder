@@ -11,8 +11,8 @@ const SignUp = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [signUp, { isLoading, error }] = useSignUpMutation();
-  const [loginWithEmail] = useLoginWithEmailMutation();
+  const [signUp, {isLoading : isSigningUp, error : signUpError}] = useSignUpMutation();
+  const [loginWithEmail, {isLoading : isLoggingIn, error : logInError}] = useLoginWithEmailMutation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -138,11 +138,11 @@ const SignUp = () => {
           <button
             type="submit"
             className="bg-blue-500 hover:cursor-pointer hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
-            disabled={isLoading}
+            disabled={isSigningUp || isLoggingIn}
           >
-            Sign Up
+            {isSigningUp ? 'Signing up...' : isLoggingIn? 'Logging In...' : 'Sign Up'}
           </button>
-          {error && <p className="text-red-500 text-sm mt-2">{error.data?.message}</p>}
+          {(signUpError || logInError) && <p className="text-red-500 text-sm mt-2">{error.data?.message}</p>}
         </div>
       </form>
       <div className="flex flex-col items-center">
