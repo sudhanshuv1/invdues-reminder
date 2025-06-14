@@ -9,6 +9,7 @@ import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import CreateInvoice from './pages/CreateInvoice';
+import OAuthConsent from './pages/OAuthConsent';
 
 function App() {
   return (
@@ -26,6 +27,7 @@ function App() {
               <Route index element={<Dashboard />} />
               <Route path="new-invoice" element={<CreateInvoice />} />
               <Route path="edit-invoice/:id" element={<CreateInvoice />} />
+              <Route path="oauth-consent" element={<OAuthConsent/>} />
             </Route>
           </Route>
         </Routes>
