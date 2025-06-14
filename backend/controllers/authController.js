@@ -74,10 +74,30 @@ const loginWithGoogle = async (req, res) => {
   
       // Redirect to the frontend with the access token
      res.redirect(`${process.env.FRONTEND_URL}/signin?accessToken=${accessToken}&name=${encodeURIComponent(user.displayName)}`);
+     
+
+    // Option 1: Set access token and user info as cookies (recommended for security)
+    // res.cookie('accessToken', accessToken, {
+    //     httpOnly: true,
+    //     sameSite: 'None',
+    //     secure: true,
+    //     maxAge: 15 * 60 * 1000, // 15 minutes
+    // });
+    // res.cookie('userName', encodeURIComponent(user.displayName), {
+    //     httpOnly: false, // Can be accessed by frontend JS if needed
+    //     sameSite: 'None',
+    //     secure: true,
+    //     maxAge: 15 * 60 * 1000,
+    // });
+    // res.redirect(process.env.FRONTEND_URL + '/signin');
+
+    // // Option 2: Redirect and let frontend fetch user info via API using the refresh token cookie
+    // // res.redirect(process.env.FRONTEND_URL + '/signin');
+
     } catch (error) {
       res.status(500).json({ message: 'Internal server error', error });
     }
-  };
+};
 
 // @desc Refresh Token
 // @route POST /auth/refresh
