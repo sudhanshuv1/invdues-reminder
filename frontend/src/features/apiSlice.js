@@ -1,43 +1,76 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-export const apiSlice = createApi({
-  reducerPath: 'api', // The key for the reducer in the store
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'https://invdues-backend.onrender.com', // Base URL for all routes
-    credentials: 'include', // Include cookies for refresh token and session handling
-    prepareHeaders: (headers, { endpoint }) => {
-      // Add Authorization header for specific endpoints
-      const accessToken = localStorage.getItem('accessToken');
-      if (accessToken) {
-        if (
-          endpoint === 'createInvoice' ||
-          endpoint === 'getInvoices' ||
-          endpoint === 'getInvoiceById' ||
-          endpoint === 'updateInvoice' ||
-          endpoint === 'deleteInvoice' ||
-          endpoint === 'logout' ||
-          endpoint === 'refresh' ||
-          endpoint === 'deleteUser'
-        ) {
-          headers.set('Authorization', `Bearer ${accessToken}`);
-        }
+// Standard baseQuery with Authorization header logic
+const rawBaseQuery = fetchBaseQuery({
+  baseUrl: 'http://localhost:5000',
+  credentials: 'include',
+  prepareHeaders: (headers, { endpoint }) => {
+    const accessToken = localStorage.getItem('accessToken');
+    if (accessToken) {
+      if (
+        endpoint === 'createInvoice' ||
+        endpoint === 'getInvoices' ||
+        endpoint === 'getInvoiceById' ||
+        endpoint === 'updateInvoice' ||
+        endpoint === 'deleteInvoice' ||
+        endpoint === 'logout' ||
+        endpoint === 'refresh' ||
+        endpoint === 'deleteUser' ||
+        endpoint === 'oauthLoginCallback'
+      ) {
+        headers.set('Authorization', `Bearer ${accessToken}`);
       }
-      return headers;
-    },
-  }),
+    }
+    return headers;
+  },
+});
+
+// Enhanced baseQuery that tries /auth/refresh on 401
+const baseQueryWithReauth = async (args, api, extraOptions) => {
+  let result = await rawBaseQuery(args, api, extraOptions);
+
+  if (result.error && result.error.status === 401) {
+    // Try to refresh the token
+    const refreshResult = await rawBaseQuery(
+      { url: '/auth/refresh', method: 'POST' },
+      api,
+      extraOptions
+    );
+    if (refreshResult.data?.accessToken) {
+      // Store new access token
+      localStorage.setItem('accessToken', refreshResult.data.accessToken);
+      api.dispatch(setCredentials({
+        user: JSON.parse(localStorage.getItem('user')), // or fetch user if needed
+        accessToken: refreshResult.data.accessToken,
+      }));
+      // Retry the original query with new token
+      result = await rawBaseQuery(args, api, extraOptions);
+    } else {
+      // Optionally, handle logout here
+      localStorage.removeItem('accessToken');
+      localStorage.removeItem('user');
+      api.dispatch(logoutAction());
+    }
+  }
+  return result;
+};
+
+export const apiSlice = createApi({
+  reducerPath: 'api',
+  baseQuery: baseQueryWithReauth,
   endpoints: (builder) => ({
     // Login with email and password
     loginWithEmail: builder.mutation({
       query: (credentials) => ({
         url: '/auth',
         method: 'POST',
-        body: credentials, // { email, password }
+        body: credentials,
       }),
     }),
 
     loginWithGoogle: builder.mutation({
       query: () => ({
-        url: '/auth/google', // Backend route for Google OAuth
+        url: '/auth/google',
         method: 'GET',
       }),
     }),
@@ -47,7 +80,7 @@ export const apiSlice = createApi({
       query: (newUser) => ({
         url: '/user',
         method: 'POST',
-        body: newUser, // { displayName, email, password }
+        body: newUser,
       }),
     }),
 
@@ -77,20 +110,20 @@ export const apiSlice = createApi({
       query: (invoice) => ({
         url: '/invoice',
         method: 'POST',
-        body: invoice, // Include userId in the request body
+        body: invoice,
       }),
     }),
 
     // Get all invoices for a user
     getInvoices: builder.query({
       query: () => ({
-        url: `/invoice`, // Include userId as a query parameter
+        url: `/invoice`,
       }),
     }),
 
     getInvoiceById: builder.query({
       query: (id) => ({
-        url: `/invoice/${id}`, // Backend route to fetch a single invoice
+        url: `/invoice/${id}`,
         method: 'GET',
       }),
     }),
@@ -100,7 +133,7 @@ export const apiSlice = createApi({
       query: ({ id, updates }) => ({
         url: `/invoice/${id}`,
         method: 'PATCH',
-        body: updates, // Include userId in the request body
+        body: updates,
       }),
     }),
 
@@ -109,6 +142,22 @@ export const apiSlice = createApi({
       query: (id) => ({
         url: `/invoice/${id}`,
         method: 'DELETE',
+      }),
+    }),
+
+    oauthLoginCallback: builder.mutation({
+      query: (body) => ({
+        url: '/oauth/login/callback?json=true',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    triggerReminders: builder.mutation({
+      query: (body) => ({
+        url: '/api/trigger-reminders',
+        method: 'POST',
+        body,
       }),
     }),
   }),
@@ -121,9 +170,11 @@ export const {
   useDeleteUserMutation,
   useRefreshQuery,
   useLogoutMutation,
-  useCreateInvoiceMutation, // Hook for creating an invoice
-  useGetInvoicesQuery, // Hook for fetching invoices
-  useGetInvoiceByIdQuery, // Hook for fetching a single invoice by ID
-  useUpdateInvoiceMutation, // Hook for updating an invoice
-  useDeleteInvoiceMutation, // Hook for deleting an invoice
+  useCreateInvoiceMutation,
+  useGetInvoicesQuery,
+  useGetInvoiceByIdQuery,
+  useUpdateInvoiceMutation,
+  useDeleteInvoiceMutation,
+  useOauthLoginCallbackMutation,
+  useTriggerRemindersMutation,
 } = apiSlice;

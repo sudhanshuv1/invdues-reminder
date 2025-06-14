@@ -1,7 +1,18 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { selectIsAuthenticated } from '../features/authSlice';
 
 const Home = () => {
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
   return (
     <div className="flex flex-col flex-grow items-center justify-center h-full bg-gray-100 px-4 overflow-scroll">
       <h1 className="text-4xl font-bold mb-4 text-center">
