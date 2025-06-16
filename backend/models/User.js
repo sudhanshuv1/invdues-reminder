@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema({
   email: { type: String, required: true, unique: true }, // Email (common for both login methods)
   password: { type: String }, // Hashed password (required for email/password users)
   profilePhoto: { type: String }, // Profile photo URL (optional)
-  createdAt: { type: Date, default: Date.now } // Timestamp for user creation
+  createdAt: { type: Date, default: Date.now }, // Timestamp for user creation
+  sendReminders: { type: Boolean, default: false }  // Whether to send reminders (default: false)
 });
 
 // Add a method to compare passwords for email/password login
