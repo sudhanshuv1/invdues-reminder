@@ -1,22 +1,49 @@
 import React, { useEffect, useState } from 'react';
-import { useGetInvoicesQuery, useTriggerRemindersMutation } from '../features/apiSlice';
+import {
+  useGetInvoicesQuery,
+  useTriggerRemindersMutation,
+  useSubscribeZapierMutation,
+  useUnsubscribeZapierMutation,
+  useCheckZapierSubscriptionQuery,
+} from '../features/apiSlice';
 import Invoice from '../components/Invoice';
 import { useNavigate } from 'react-router-dom';
 
 const Dashboard = () => {
   const navigate = useNavigate();
   
-  // Fetch invoices using RTK Query.
+  // Fetch invoices.
   const { data: invoices = [], isLoading, error: fetchError, refetch } = useGetInvoicesQuery();
   
-  // Mutation hook for triggering Zapier reminders.
+  // Mutation hook for triggering reminders.
   const [triggerReminders, { isLoading: triggering }] = useTriggerRemindersMutation();
-  
+
+  // Mutation hooks for subscribing/unsubscribing.
+  const [subscribeZapierMutation, { isLoading: subscribing }] = useSubscribeZapierMutation();
+  const [unsubscribeZapierMutation, { isLoading: unsubscribing }] = useUnsubscribeZapierMutation();
+
+  // Query hook to check current subscription status.
+  const {
+    data: subscriptionData,
+    isLoading: subscriptionLoading,
+    refetch: refetchSubscription,
+  } = useCheckZapierSubscriptionQuery();
+
+  // Local state for subscription status.
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // Update local state when subscriptionData is loaded.
   useEffect(() => {
-    // Refetch invoices every time the Dashboard is rendered.
+    if (subscriptionData) {
+      setIsSubscribed(subscriptionData.sendReminders);
+    }
+  }, [subscriptionData]);
+
+  // Refetch invoices on page load.
+  useEffect(() => {
     refetch();
   }, [refetch]);
-  
+
   const handleEdit = (invoice) => {
     console.log('Edit invoice:', invoice);
     navigate(`edit-invoice/${invoice._id}`, { state: { invoice } });
@@ -27,21 +54,13 @@ const Dashboard = () => {
   };
 
   const handleTriggerReminders = async () => {
-    // Check if a Zapier OAuth token is stored.
     const zapierOAuthToken = localStorage.getItem('zapierOAuthToken');
     if (!zapierOAuthToken) {
-      // If not, redirect to your OAuth consent page.
-      // Here, we'll pass the current page's URL as the redirect_uri and a state value.
       const currentRedirectUri = window.location.origin + '/dashboard';
-      navigate(
-        `oauth-consent?redirect_uri=${encodeURIComponent(currentRedirectUri)}&state=triggerReminder`
-      );
+      navigate(`oauth-consent?redirect_uri=${encodeURIComponent(currentRedirectUri)}&state=triggerReminder`);
       return;
     }
     
-    // Optionally, you could filter invoices (for example, by checking due dates)
-    // const dueInvoices = invoices.filter(invoice => new Date(invoice.dueDate) < new Date());
-    // For simplicity, we'll trigger the action without additional payload.
     try {
       await triggerReminders({}).unwrap();
       alert("Reminder emails triggered successfully.");
@@ -49,6 +68,31 @@ const Dashboard = () => {
       console.error("Error triggering reminders:", error);
       alert("Failed to trigger reminders. Please try again.");
     }
+  };
+
+  // Toggle subscription status.
+  const handleSubscriptionToggle = async () => {
+    if (isSubscribed) {
+      try {
+        const response = await unsubscribeZapierMutation({}).unwrap();
+        setIsSubscribed(response.sendReminders);
+        alert("Unsubscribed from Zapier successfully.");
+      } catch (error) {
+        console.error("Error unsubscribing:", error);
+        alert("Failed to unsubscribe from Zapier.");
+      }
+    } else {
+      try {
+        const response = await subscribeZapierMutation({}).unwrap();
+        setIsSubscribed(response.sendReminders);
+        alert("Subscribed to Zapier successfully.");
+      } catch (error) {
+        console.error("Error subscribing:", error);
+        alert("Failed to subscribe to Zapier.");
+      }
+    }
+    // Refetch the subscription status if needed.
+    refetchSubscription();
   };
 
   return (
@@ -63,6 +107,15 @@ const Dashboard = () => {
             disabled={triggering}
           >
             {triggering ? "Triggering..." : "Trigger Reminder Emails"}
+          </button>
+          <button
+            onClick={handleSubscriptionToggle}
+            className="bg-purple-500 hover:cursor-pointer hover:bg-purple-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+            disabled={subscribing || unsubscribing || subscriptionLoading}
+          >
+            {(subscribing || unsubscribing)
+              ? "Processing..."
+              : (isSubscribed ? "Unsubscribe from Zapier" : "Subscribe to Zapier")}
           </button>
         </div>
         <button

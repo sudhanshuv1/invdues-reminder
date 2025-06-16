@@ -19,9 +19,9 @@ const Invoice = ({ invoice, onEdit, refetch }) => {
       <div className="flex flex-col mb-4 md:mb-0">
         <h2 className="text-xl font-bold text-gray-800">{invoice.clientName}</h2>
         <p className="text-gray-600">Email: {invoice.clientEmail}</p>
-        <p className="text-gray-600">Amount: ${invoice.amount}</p>
-        <p className="text-gray-600">Due Date: {new Date(invoice.dueDate).toLocaleDateString()}</p>
-        <p className={`text-sm font-bold ${invoice.status === 'paid' ? 'text-green-600' : 'text-red-600'}`}>
+        <p className="text-gray-600">Amount: INR {invoice.amount}</p>
+        <p className="text-gray-600">Due Date: {new Date(invoice.dueDate).toLocaleDateString('en-GB')}</p>
+        <p className={`text-sm font-bold ${invoice.status === 'paid' ? 'text-green-600' : invoice.status === 'unpaid' ? 'text-red-600' : 'text-violet-900'}`}>
           Status: {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
         </p>
       </div>

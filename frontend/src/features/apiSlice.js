@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { setCredentials, logout as logoutAction } from './authSlice';
 
 // Standard baseQuery with Authorization header logic
 const rawBaseQuery = fetchBaseQuery({
@@ -16,7 +17,10 @@ const rawBaseQuery = fetchBaseQuery({
         endpoint === 'logout' ||
         endpoint === 'refresh' ||
         endpoint === 'deleteUser' ||
-        endpoint === 'oauthLoginCallback'
+        endpoint === 'oauthLoginCallback' ||
+        endpoint === 'subscribeZapier' ||
+        endpoint === 'unsubscribeZapier' ||
+        endpoint === 'checkZapierSubscription' 
       ) {
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
@@ -94,7 +98,10 @@ export const apiSlice = createApi({
 
     // Refresh Token
     refresh: builder.query({
-      query: () => '/auth/refresh',
+      query: () => ({
+        url: '/auth/refresh',
+        method: 'POST',
+      }),
     }),
 
     // Logout
@@ -160,6 +167,31 @@ export const apiSlice = createApi({
         body,
       }),
     }),
+
+    // New: Subscribe to Zapier endpoint (sets user's sendReminders flag to true)
+    subscribeZapier: builder.mutation({
+      query: (body) => ({
+        url: '/zapier/subscribe',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    // New: Unsubscribe from Zapier endpoint (sets user's sendReminders flag to false)
+    unsubscribeZapier: builder.mutation({
+      query: (body) => ({
+        url: '/zapier/unsubscribe',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    checkZapierSubscription: builder.query({
+      query: () => ({
+        url: '/zapier/check-subscription',
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -177,4 +209,7 @@ export const {
   useDeleteInvoiceMutation,
   useOauthLoginCallbackMutation,
   useTriggerRemindersMutation,
+  useSubscribeZapierMutation,
+  useUnsubscribeZapierMutation,
+  useCheckZapierSubscriptionQuery,
 } = apiSlice;
