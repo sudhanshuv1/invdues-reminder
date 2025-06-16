@@ -12,6 +12,7 @@ router.get('/me', oauthController.me);
 
 // Zapier calls this endpoint to exchange the authorization code for tokens.
 router.post('/token', oauthController.token);
+router.post('/refresh', oauthController.refresh);
 
 router.use(verifyJWT);
 

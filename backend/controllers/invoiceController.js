@@ -48,6 +48,27 @@ const getInvoiceById = async (req, res) => {
   }
 };
 
+// Get Due Invoices for a user
+const getDueInvoices = async (req, res) => {
+  try {
+    const userId = req.user.id; // Assuming the user ID is set by your authentication middleware
+    const now = new Date();
+
+    // Query for invoices that are unpaid and have a due date in the past (or today)
+    const dueInvoices = await Invoice.find({
+      userId,
+      status: 'unpaid', // Adjust this if your status value for pending invoices is different
+      dueDate: { $lte: now }
+    });
+    
+    console.log(`Found ${dueInvoices.length} due invoices for user ${userId}`);
+    res.status(200).json(dueInvoices);
+  } catch (error) {
+    console.error('Failed to retrieve due invoices:', error);
+    res.status(500).json({ message: 'Failed to retrieve due invoices', error: error.message });
+  }
+};
+
 // Update an Invoice by ID
 const updateInvoice = async (req, res) => {
   try {
@@ -87,6 +108,7 @@ module.exports = {
   createInvoice,
   getInvoices,
   getInvoiceById,
+  getDueInvoices,
   updateInvoice,
   deleteInvoice,
 };
