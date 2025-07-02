@@ -3,7 +3,7 @@ import { setCredentials, logout as logoutAction } from './authSlice';
 
 // Standard baseQuery with Authorization header logic
 const rawBaseQuery = fetchBaseQuery({
-  baseUrl: 'http://localhost:5000',
+  baseUrl: `${import.meta.env.VITE_BACKEND_URL}`,
   credentials: 'include',
   prepareHeaders: (headers, { endpoint }) => {
     const accessToken = localStorage.getItem('accessToken');
@@ -20,7 +20,16 @@ const rawBaseQuery = fetchBaseQuery({
         endpoint === 'oauthLoginCallback' ||
         endpoint === 'subscribeZapier' ||
         endpoint === 'unsubscribeZapier' ||
-        endpoint === 'checkZapierSubscription' 
+        endpoint === 'checkZapierSubscription' ||
+        endpoint === 'getMailConfig' ||
+        endpoint === 'configureGmail' ||
+        endpoint === 'configureSMTP' ||
+        endpoint === 'removeMailConfig' ||
+        endpoint === 'triggerReminders' ||
+        endpoint === 'startReminders' ||
+        endpoint === 'stopReminders' ||
+        endpoint === 'getReminderStatus' ||
+        endpoint === 'sendImmediateReminders'
       ) {
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
@@ -192,6 +201,65 @@ export const apiSlice = createApi({
         method: 'GET',
       }),
     }),
+
+    getMailConfig: builder.query({
+      query: () => ({
+        url: '/mail-config',
+        method: 'GET',
+      }),
+    }),
+
+    configureGmail: builder.mutation({
+      query: (body) => ({
+        url: '/mail-config/gmail',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    configureSMTP: builder.mutation({
+      query: (body) => ({
+        url: '/mail-config/smtp',
+        method: 'POST',
+        body,
+      }),
+    }),
+
+    removeMailConfig: builder.mutation({
+      query: () => ({
+        url: '/mail-config',
+        method: 'DELETE',
+      }),
+    }),
+
+    startReminders: builder.mutation({
+      query: () => ({
+        url: '/reminder/start',
+        method: 'POST',
+      }),
+    }),
+
+    stopReminders: builder.mutation({
+      query: () => ({
+        url: '/reminder/stop',
+        method: 'POST',
+      }),
+    }),
+
+    getReminderStatus: builder.query({
+      query: () => ({
+        url: '/reminder/status',
+        method: 'GET',
+      }),
+    }),
+
+    sendImmediateReminders: builder.mutation({
+      query: () => ({
+        url: '/reminder/send-immediate',
+        method: 'POST',
+      }),
+    }),
+
   }),
 });
 
@@ -212,4 +280,12 @@ export const {
   useSubscribeZapierMutation,
   useUnsubscribeZapierMutation,
   useCheckZapierSubscriptionQuery,
+  useGetMailConfigQuery,
+  useConfigureGmailMutation,
+  useConfigureSMTPMutation,
+  useRemoveMailConfigMutation,
+  useStartRemindersMutation,
+  useStopRemindersMutation,
+  useGetReminderStatusQuery,
+  useSendImmediateRemindersMutation,
 } = apiSlice;
