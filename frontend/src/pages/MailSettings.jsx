@@ -7,7 +7,7 @@ import {
 } from '../features/apiSlice';
 import DashboardLayout from '../components/DashboardLayout';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash, faTimes } from '@fortawesome/free-solid-svg-icons';
 
 const MailSettings = () => {
   const { data: mailConfig, isLoading, refetch } = useGetMailConfigQuery();
@@ -73,6 +73,17 @@ const MailSettings = () => {
     }
   };
 
+  const closeSMTPForm = () => {
+    setShowSMTPForm(false);
+    setSMTPData({
+      host: '',
+      port: '587',
+      secure: 'true',
+      user: '',
+      pass: ''
+    });
+  };
+
   // Handle OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -113,7 +124,7 @@ const MailSettings = () => {
 
         {/* Content Section */}
         <div className="flex-1 overflow-y-auto p-6">
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto dark:bg-gray-800 dark:text-gray-200">
             {mailConfig?.configured ? (
               <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
                 <h2 className="text-lg font-semibold text-green-800">Mail Configured</h2>
@@ -130,105 +141,123 @@ const MailSettings = () => {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-blue-50 border border-blue-200 p-4 rounded-lg">
+                <div className="bg-blue-50 dark:bg-gray-800 dark:border-gray-600 border border-blue-200 p-4 rounded-lg">
                   <h2 className="text-lg font-semibold mb-3">Configure Mail Service</h2>
                   <p className="mb-4">Choose how you want to send reminder emails:</p>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-3 flex">
+                    {/* Hide gmail configuration for now */}
                     <button
                       onClick={handleGmailConnect}
-                      className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600"
+                      className="w-full bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 hidden"
                     >
                       Connect Gmail (Recommended)
                     </button>
                     
                     <button
-                      onClick={() => setShowSMTPForm(!showSMTPForm)}
-                      className="w-full bg-gray-500 text-white py-2 px-4 rounded hover:bg-gray-600"
+                      onClick={() => setShowSMTPForm(true)}
+                      className="w-1/2 bg-white active:bg-gray-200 m-auto border border-lime-300 hover:shadow-lime-300 hover:shadow-sm dark:text-white dark:bg-gray-600 dark:active:bg-gray-800 text-gray-800 py-2 px-4 rounded"
                     >
                       Configure Custom SMTP
                     </button>
                   </div>
                 </div>
-
-                {showSMTPForm && (
-                  <form onSubmit={handleSMTPSubmit} className="bg-gray-50 border border-gray-200 p-4 relative rounded-lg space-y-4">
-                    <h3 className="font-semibold">SMTP Configuration</h3>
-                    
-                    <input
-                      type="text"
-                      placeholder="SMTP Host (e.g., smtp.gmail.com)"
-                      value={smtpData.host}
-                      onChange={(e) => setSMTPData({...smtpData, host: e.target.value})}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    
-                    <input
-                      type="number"
-                      placeholder="Port (587 for TLS, 465 for SSL)"
-                      value={smtpData.port}
-                      onChange={(e) => setSMTPData({...smtpData, port: e.target.value})}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    
-                    <select
-                      value={smtpData.secure}
-                      onChange={(e) => setSMTPData({...smtpData, secure: e.target.value})}
-                      className="w-full p-2 border rounded"
-                    >
-                      <option value="true">SSL (Port 465)</option>
-                      <option value="false">TLS (Port 587)</option>
-                    </select>
-                    
-                    <input
-                      type="email"
-                      placeholder="Your Email Address"
-                      value={smtpData.user}
-                      onChange={(e) => setSMTPData({...smtpData, user: e.target.value})}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-                    
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="App Password (not your regular password)"
-                      value={smtpData.pass}
-                      onChange={(e) => setSMTPData({...smtpData, pass: e.target.value})}
-                      className="w-full p-2 border rounded"
-                      required
-                    />
-
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-6 bottom-20 hover:cursor-pointer text-gray-400 hover:text-gray-500"
-                    >
-                      <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
-                    </button>
-                    
-                    <div className="flex space-x-2">
-                      <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                      >
-                        Save SMTP Configuration
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setShowSMTPForm(false)}
-                        className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
-                      >
-                        Cancel
-                      </button>
-                    </div>
-                  </form>
-                )}
               </div>
             )}
           </div>
         </div>
+
+        {/* SMTP Form Popup Modal */}
+        {showSMTPForm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto">
+              {/* Modal Header */}
+              <div className="flex items-center dark:bg-gray-800 dark:text-gray-200 dark:border-gray-600 justify-between p-4 border-b">
+                <h3 className="text-lg font-semibold">SMTP Configuration</h3>
+                <button
+                  onClick={closeSMTPForm}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                >
+                  <FontAwesomeIcon icon={faTimes} size="lg" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <form onSubmit={handleSMTPSubmit} className="p-4 dark:bg-gray-800 dark:text-gray-200 space-y-4">
+                <input
+                  type="text"
+                  placeholder="SMTP Host (e.g., smtp.gmail.com)"
+                  value={smtpData.host}
+                  onChange={(e) => setSMTPData({...smtpData, host: e.target.value})}
+                  className="w-full p-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 border rounded"
+                  required
+                />
+                
+                <input
+                  type="number"
+                  placeholder="Port (587 for TLS, 465 for SSL)"
+                  value={smtpData.port}
+                  onChange={(e) => setSMTPData({...smtpData, port: e.target.value})}
+                  className="w-full p-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 border rounded"
+                  required
+                />
+                
+                <select
+                  value={smtpData.secure}
+                  onChange={(e) => setSMTPData({...smtpData, secure: e.target.value})}
+                  className="w-full p-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 border rounded"
+                >
+                  <option value="true">SSL (Port 465)</option>
+                  <option value="false">TLS (Port 587)</option>
+                </select>
+                
+                <input
+                  type="email"
+                  placeholder="Your Email Address"
+                  value={smtpData.user}
+                  onChange={(e) => setSMTPData({...smtpData, user: e.target.value})}
+                  className="w-full p-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 border rounded"
+                  required
+                />
+                
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="App Password (not your regular password)"
+                    value={smtpData.pass}
+                    onChange={(e) => setSMTPData({...smtpData, pass: e.target.value})}
+                    className="w-full p-2 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600 border rounded pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-500"
+                  >
+                    <FontAwesomeIcon icon={showPassword ? faEyeSlash : faEye} />
+                  </button>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex justify-between pt-4 border-t">
+                  <button
+                    type="submit"
+                    className="bg-blue-500 text-white px-2 py-1 rounded hover:bg-blue-600"
+                  >
+                    Save SMTP Configuration
+                  </button>
+                  <button
+                    type="button"
+                    onClick={closeSMTPForm}
+                    className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-600"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </div>
     </DashboardLayout>
   );
