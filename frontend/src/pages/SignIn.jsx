@@ -5,6 +5,8 @@ import { useDispatch } from 'react-redux';
 import { setCredentials } from '../features/authSlice';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faEye, faEyeSlash } from '@fortawesome/free-solid-svg-icons';
+import GoogleIcon from '../assets/google-icon.svg';
+
 
 const SignIn = () => {
   const [email, setEmail] = useState('');
@@ -59,15 +61,17 @@ const SignIn = () => {
 
   const handleGoogleSignIn = () => {
     // Redirect to the backend's Google OAuth route
-    window.location.href = 'https://invdues-backend.onrender.com/auth/google'; // Replace with your backend URL
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`; // Replace with your backend URL
   };
+
+  // Import the colored Google icon SVG
 
   return (
     <div className="flex flex-col items-center justify-center flex-grow bg-gray-100 px-4">
       <h1 className="text-3xl font-bold mb-6">Sign In</h1>
       <form
         onSubmit={handleEmailSignIn}
-        className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-sm"
+        className="bg-white border border-lime-300 shadow-md rounded px-8 pt-6 pb-8 mb-4 w-full max-w-sm"
       >
         <div className="mb-4">
           <label
@@ -122,12 +126,15 @@ const SignIn = () => {
         </div>
       </form>
       <div className="flex flex-col items-center">
-        <p className="text-gray-600 mb-4">Or sign in with</p>
+        <p className="text-gray-900 font-bold text-lg mb-4">Or</p>
         <button
           onClick={handleGoogleSignIn}
-          className="bg-red-500 hover:bg-red-600 hover:cursor-pointer text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+          className="flex items-center gap-2 border border-lime-300 hover:border-lime-400 hover:shadow-lg hover:cursor-pointer text-gray-700 font-semibold py-2 px-4 rounded shadow-md focus:shadow-outline"
         >
-          Sign In with Google
+          Sign in with
+          <span className="w-5 h-5 flex items-center">
+            <img src={GoogleIcon} alt="Google" className="w-5 h-5" />
+          </span>
         </button>
       </div>
     </div>

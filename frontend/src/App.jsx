@@ -10,6 +10,8 @@ import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
 import CreateInvoice from './pages/CreateInvoice';
 import OAuthConsent from './pages/OAuthConsent';
+import MailSettings from './pages/MailSettings';
+import ReminderControl from './pages/ReminderControl';
 
 function App() {
   return (
@@ -28,6 +30,8 @@ function App() {
               <Route path="new-invoice" element={<CreateInvoice />} />
               <Route path="edit-invoice/:id" element={<CreateInvoice />} />
               <Route path="oauth-consent" element={<OAuthConsent/>} />
+              <Route path="mail-settings" element={<MailSettings />} />
+              <Route path="reminder-control" element={<ReminderControl />} />
             </Route>
           </Route>
         </Routes>
