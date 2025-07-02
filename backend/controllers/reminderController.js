@@ -6,6 +6,8 @@ const axios = require('axios'); // For making HTTP requests
 const CLIENT_ID = process.env.GOOGLE_CLIENT_ID; // Google Client ID
 const CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET; // Google Client Secret
 const REDIRECT_URI = process.env.GOOGLE_REDIRECT_URI; // Redirect URI registered in Google Cloud Console
+const reminderService = require('../utils/reminderService');
+const APP_URL = process.env.APP_URL || 'http://localhost:5000';
 
 // @desc Redirect user to Google's OAuth consent screen
 // @route GET /auth/google
@@ -182,13 +184,69 @@ const sendReminders = async (req, res) => {
     }
 };
 
+const startReminders = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await reminderService.startReminders(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Failed to start reminders', 
+      error: error.message 
+    });
+  }
+};
+
+const stopReminders = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await reminderService.stopReminders(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Failed to stop reminders', 
+      error: error.message 
+    });
+  }
+};
+
+const getReminderStatus = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const status = await reminderService.getReminderStatus(userId);
+    res.status(200).json(status);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Failed to get reminder status', 
+      error: error.message 
+    });
+  }
+};
+
+const sendImmediateReminders = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const result = await reminderService.sendImmediateReminders(userId);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(500).json({ 
+      message: 'Failed to send immediate reminders', 
+      error: error.message 
+    });
+  }
+};
+
 module.exports = {
-    authorizeUrl,
-    googleOAuthAuthorize,
-    googleOAuthCallback,
-    handleTokenExchange,
-    subscribeWebhook,
-    unsubscribeWebhook,
-    sendReminders,
-    getMe,
+  authorizeUrl,
+  googleOAuthAuthorize,
+  googleOAuthCallback,
+  handleTokenExchange,
+  subscribeWebhook,
+  unsubscribeWebhook,
+  sendReminders,
+  getMe,
+  startReminders,
+  stopReminders,
+  getReminderStatus,
+  sendImmediateReminders
 };

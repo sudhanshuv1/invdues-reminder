@@ -38,7 +38,12 @@ dbConnect();
 app.use(passport.initialize());
 
 // Import the scheduler so cron jobs are set up.
-require(path.join(__dirname, 'utils', 'scheduler'));
+require(path.join(__dirname, 'utils', 'reminderScheduler'));
+
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.path}`);
+  next();
+});
 
 // Define your routes.
 app.use('/auth', require('./routes/authRoutes'));
@@ -47,6 +52,7 @@ app.use('/user', require('./routes/userRoutes'));
 app.use('/invoice', require('./routes/invoiceRoutes'));
 app.use('/zapier', require('./routes/zapierRoutes'));
 app.use('/reminder', require('./routes/reminderRoutes'));
+app.use('/mail-config', require('./routes/mailConfigRoutes'));
 
 // Default route.
 app.get('/', (req, res) => {
