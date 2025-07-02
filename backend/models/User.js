@@ -1,16 +1,16 @@
 const mongoose = require('mongoose');
 
 const userSchema = new mongoose.Schema({
-  googleId: { type: String }, // Google OAuth ID (optional for email/password users)
-  displayName: { type: String, required: true }, // User's name
-  email: { type: String, required: true, unique: true }, // Email (common for both login methods)
-  password: { type: String }, // Hashed password (required for email/password users)
-  profilePhoto: { type: String }, // Profile photo URL (optional)
-  createdAt: { type: Date, default: Date.now }, // Timestamp for user creation
-  sendReminders: { type: Boolean, default: false }  // Whether to send reminders (default: false)
+  googleId: { type: String },
+  displayName: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String },
+  profilePhoto: { type: String },
+  createdAt: { type: Date, default: Date.now },
+  sendReminders: { type: Boolean, default: false },
+  mailConfig: { type: mongoose.Schema.Types.ObjectId, ref: 'MailConfig' } // Add mail configuration
 });
 
-// Add a method to compare passwords for email/password login
 userSchema.methods.comparePassword = async function (candidatePassword) {
   const bcrypt = require('bcrypt');
   return await bcrypt.compare(candidatePassword, this.password);
