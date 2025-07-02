@@ -18,12 +18,17 @@ const ReminderControl = () => {
 
   // Add this state to track processing
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // Properly extract email configuration status
   const isEmailConfigured = mailConfig?.configured || false;
   
   // Properly extract reminder status
-  const isReminderActive = reminderStatus?.active || false;
+  const isReminderActive = reminderStatus?.isActive || false;
+
+  const lastReminderSent = reminderStatus?.lastReminderSent
+    ? new Date(reminderStatus.lastReminderSent).toLocaleString()
+    : 'Never';
 
   const handleStart = async () => {
     if (!isEmailConfigured) {
@@ -62,14 +67,15 @@ const ReminderControl = () => {
       return;
     }
 
-    setIsProcessing(true);
+    setIsSending(true);
     try {
       const result = await sendImmediateReminders().unwrap();
       alert(`${result.count || 0} reminder emails sent successfully!`);
     } catch (error) {
       alert('Failed to send reminders: ' + (error.data?.message || error.message));
     } finally {
-      setIsProcessing(false);
+      setIsSending(false);
+      refetch();
     }
   };
 
@@ -97,30 +103,30 @@ const ReminderControl = () => {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto">
             {!isEmailConfigured && (
-              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                <p className="text-yellow-800">
+              <div className="bg-yellow-50 dark:bg-gray-800 dark:border-gray-600 border border-yellow-200 rounded-lg p-4 mb-4">
+                <p className="text-yellow-800 dark:text-yellow-200">
                   ⚠️ Email not configured. Please set up your email settings first.
                 </p>
               </div>
             )}
 
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-600 dark:border-gray-500 dark:text-gray-200 rounded-lg">
                 <div>
                   <h3 className="font-semibold">Reminder System Status</h3>
-                  <p className="text-sm text-gray-600">
-                    Status: <span className={`font-medium ${isReminderActive ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-sm dark:text-gray-200 text-gray-600">
+                    Status: <span className={`font-medium ${isReminderActive ? 'dark:text-green-400 text-green-600' : 'dark:text-red-400 text-red-600'}`}>
                       {isReminderActive ? 'Active' : 'Inactive'}
                     </span>
                   </p>
-                  <p className="text-sm text-gray-600">
-                    Email: <span className={`font-medium ${isEmailConfigured ? 'text-green-600' : 'text-red-600'}`}>
+                  <p className="text-sm dark:text-gray-200 text-gray-600">
+                    Email: <span className={`font-medium ${isEmailConfigured ? 'dark:text-green-400 text-green-600' : 'dark:text-red-400 text-red-600'}`}>
                       {isEmailConfigured ? 'Configured' : 'Not Configured'}
                     </span>
                   </p>
-                  {reminderStatus?.lastReminderSent && (
-                    <p className="text-sm text-gray-500">
-                      Last sent: {new Date(reminderStatus.lastReminderSent).toLocaleString()}
+                  {lastReminderSent && (
+                    <p className="text-sm dark:text-gray-200 text-gray-500">
+                      Last reminder emails were sent on: <span className="font-medium dark:text-green-400 text-green-600">{lastReminderSent}</span>
                     </p>
                   )}
                 </div>
@@ -130,7 +136,7 @@ const ReminderControl = () => {
                     <button
                       onClick={handleStart}
                       disabled={isProcessing || !isEmailConfigured}
-                      className="bg-green-500 hover:bg-green-600 disabled:bg-gray-300 text-white px-4 py-2 rounded transition-colors"
+                      className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
                     >
                       {isProcessing ? 'Starting...' : 'Start Reminders'}
                     </button>
@@ -138,7 +144,7 @@ const ReminderControl = () => {
                     <button
                       onClick={handleStop}
                       disabled={isProcessing}
-                      className="bg-red-500 hover:bg-red-600 disabled:bg-gray-300 text-white px-4 py-2 rounded transition-colors"
+                      className="bg-red-500 hover:bg-red-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
                     >
                       {isProcessing ? 'Stopping...' : 'Stop Reminders'}
                     </button>
@@ -146,21 +152,21 @@ const ReminderControl = () => {
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-lg">
+              <div className="p-4 bg-blue-50 dark:bg-blue-950 dark:text-gray-200 rounded-lg">
                 <h3 className="font-semibold mb-2">Send Immediate Reminders</h3>
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-200 mb-3">
                   Send reminder emails to all clients with overdue invoices right now.
                 </p>
                 <button
                   onClick={handleSendImmediate}
-                  disabled={isProcessing || !isEmailConfigured}
-                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-300 text-white px-4 py-2 rounded transition-colors"
+                  disabled={isSending || (isProcessing && !isReminderActive) || !isEmailConfigured}
+                  className="bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white px-4 py-2 rounded transition-colors"
                 >
-                  {isProcessing ? 'Sending...' : 'Send Now'}
+                  {isSending || (isProcessing && !isReminderActive) ? 'Sending...' : 'Send Now'}
                 </button>
               </div>
 
-              <div className="text-sm text-gray-500 p-3 bg-gray-50 rounded">
+              <div className="text-sm text-gray-500 dark:text-gray-200 dark:border-gray-600 dark:border p-3 bg-gray-50 dark:bg-gray-800 rounded">
                 <p><strong>How it works:</strong></p>
                 <ul className="list-disc list-inside mt-1 space-y-1">
                   <li>When you start reminders, immediate emails are sent to all overdue invoice recipients</li>
