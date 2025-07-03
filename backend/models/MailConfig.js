@@ -27,6 +27,13 @@ const MailConfigSchema = new mongoose.Schema({
   secure: { type: Boolean },
   pass: { type: String }, // App password or SMTP password
   
+  // Email Template Customization
+  emailTemplate: {
+    useCustomTemplate: { type: Boolean, default: false },
+    customSubject: { type: String, default: '' },
+    customContent: { type: String, default: '' }
+  },
+  
   isConfigured: { 
     type: Boolean, 
     default: true 

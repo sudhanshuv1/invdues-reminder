@@ -1,12 +1,13 @@
 const User = require('../models/User');
 const Invoice = require('../models/Invoice');
 const { makeTransport } = require('./transporterFactory');
+const { getEmailContent } = require('./emailTemplateProcessor');
+
 class ReminderService {
   constructor() {
     this.activeJobs = new Map(); // Track active cron jobs per user
   }
 
-  // In reminderService.js, update the sendImmediateReminders method:
   async sendImmediateReminders(userId) {
     try {
       const user = await User.findById(userId).populate('mailConfig');
@@ -32,30 +33,16 @@ class ReminderService {
       // Send reminder for each overdue invoice
       for (const invoice of overdueInvoices) {
         try {
+          // Get email content based on template configuration
+          const emailContent = getEmailContent(user.mailConfig, invoice, user);
+          
           const mailOptions = {
             from: user.mailConfig.user,
             to: invoice.clientEmail,
-            subject: `Payment Reminder - Invoice ${invoice._id}`,
+            subject: emailContent.subject,
             html: `
               <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                <h2 style="color: #333;">Payment Reminder</h2>
-                <p>Dear ${invoice.clientName},</p>
-                <p>This is a reminder that your invoice is overdue for payment.</p>
-                
-                <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                  <h3 style="margin-top: 0;">Invoice Details:</h3>
-                  <ul style="list-style: none; padding: 0;">
-                    <li><strong>Invoice ID:</strong> ${invoice._id}</li>
-                    <li><strong>Amount:</strong> ₹${invoice.amount}</li>
-                    <li><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString()}</li>
-                    <li><strong>Days Overdue:</strong> ${Math.ceil((new Date() - new Date(invoice.dueDate)) / (1000 * 60 * 60 * 24))} days</li>
-                  </ul>
-                </div>
-                
-                <p>Please process the payment at your earliest convenience to avoid any late fees.</p>
-                <p>If you have already made the payment, please disregard this message.</p>
-                
-                <p>Best regards,<br>${user.displayName}</p>
+                ${emailContent.content.replace(/\n/g, '<br>')}
                 
                 <hr style="margin-top: 30px;">
                 <p style="font-size: 12px; color: #666;">
@@ -123,7 +110,7 @@ class ReminderService {
 
   async getReminderStatus(userId) {
     try {
-      const user = await User.findById(userId).select('sendReminders lastReminderSent mailConfig');
+      const user = await User.findById(userId).populate('mailConfig');
       
       return {
         isActive: user.sendReminders || false,
