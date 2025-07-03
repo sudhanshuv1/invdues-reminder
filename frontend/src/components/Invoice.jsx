@@ -38,7 +38,7 @@ const Invoice = ({ invoice, onEdit, refetch }) => {
         <p className="dark:text-gray-300 text-gray-600"><span className="font-semibold">Email: </span>{invoice.clientEmail}</p>
         <p className="dark:text-gray-300 text-gray-600"><span className="font-semibold">Amount: </span>₹{invoice.amount}</p>
         <p className="dark:text-gray-300 text-gray-600"><span className="font-semibold">Due Date: </span>{new Date(invoice.dueDate).toLocaleDateString('en-GB')}</p>
-        <p className={`text-sm font-bold ${invoice.status === 'paid' ? 'text-green-600' : invoice.status === 'unpaid' ? 'text-red-600' : 'text-violet-900'}`}>
+        <p className={`text-sm font-bold ${invoice.status === 'paid' ? 'text-green-600' : invoice.status === 'unpaid' ? 'text-yellow-600' : 'text-red-600'}`}>
           Status: {invoice.status.charAt(0).toUpperCase() + invoice.status.slice(1)}
         </p>
       </div>

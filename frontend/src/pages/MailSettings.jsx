@@ -126,15 +126,18 @@ const MailSettings = () => {
         <div className="flex-1 overflow-y-auto p-6">
           <div className="max-w-2xl mx-auto dark:bg-gray-800 dark:text-gray-200">
             {mailConfig?.configured ? (
-              <div className="bg-green-50 border border-green-200 p-4 rounded-lg mb-6">
-                <h2 className="text-lg font-semibold text-green-800">Mail Configured</h2>
-                <p className="text-green-600">
-                  Provider: {mailConfig.provider} <br />
-                  Email: {mailConfig.user}
-                </p>
+              <div className="flex justify-between bg-green-50 dark:bg-green-900 dark:border dark:border-green-800 dark:rounded-lg border border-green-200 p-4 rounded-lg">
+                <div className="flex flex-col">
+                  <h2 className="text-lg font-semibold dark:text-gray-300 text-green-800">Mail Configured</h2>
+                  <p className="text-green-600 dark:text-gray-200">
+                    Provider: {mailConfig.provider} <br />
+                    Email: {mailConfig.user}
+                  </p>
+                </div>
+                
                 <button
                   onClick={handleRemoveConfig}
-                  className="mt-2 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
+                  className="mt-9 mb-1 bg-red-500 dark:bg-red-600 dark:hover:bg-red-500 dark:text-gray-200 text-white px-2 py-1 rounded hover:bg-red-600"
                 >
                   Remove Configuration
                 </button>
