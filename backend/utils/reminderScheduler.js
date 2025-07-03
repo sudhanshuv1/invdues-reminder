@@ -2,6 +2,7 @@ const cron = require('node-cron');
 const User = require('../models/User');
 const Invoice = require('../models/Invoice');
 const { makeTransport } = require('./transporterFactory');
+const { getEmailContent } = require('./emailTemplateProcessor');
 
 async function sendPeriodicReminders() {
   try {
@@ -9,14 +10,19 @@ async function sendPeriodicReminders() {
     
     // Find users who have BOTH mail configured AND sendReminders enabled
     const activeUsers = await User.find({ 
-      sendReminders: true,
-      'mailConfig.isConfigured': true 
-    });
+      sendReminders: true
+    }).populate('mailConfig');
     
     console.log(`Found ${activeUsers.length} active users for reminders`);
     
     for (const user of activeUsers) {
       try {
+        // Skip if mail not configured
+        if (!user.mailConfig || !user.mailConfig.isConfigured) {
+          console.log(`Skipping user ${user._id}: Mail not configured`);
+          continue;
+        }
+        
         // Find due invoices for this user
         const dueInvoices = await Invoice.find({
           userId: user._id,
@@ -25,32 +31,25 @@ async function sendPeriodicReminders() {
         });
         
         if (dueInvoices.length > 0) {
-          const transporter = await makeTransport(user.mailConfig);
+          const transporter = await makeTransport(user._id);
           
           // Send reminder for each invoice
           for (const invoice of dueInvoices) {
+            // Get email content based on template configuration
+            const emailContent = getEmailContent(user.mailConfig, invoice, user);
+            
             const mailOptions = {
               from: user.mailConfig.user,
               to: invoice.clientEmail,
-              subject: `Payment Reminder - Invoice ${invoice._id}`,
+              subject: emailContent.subject,
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-                  <h2 style="color: #333;">Payment Reminder</h2>
-                  <p>Dear ${invoice.clientName},</p>
-                  <p>This is a periodic reminder that your invoice is overdue for payment.</p>
+                  ${emailContent.content.replace(/\n/g, '<br>')}
                   
-                  <div style="background-color: #f9f9f9; padding: 20px; border-radius: 5px; margin: 20px 0;">
-                    <h3 style="margin-top: 0;">Invoice Details:</h3>
-                    <ul style="list-style: none; padding: 0;">
-                      <li><strong>Invoice ID:</strong> ${invoice._id}</li>
-                      <li><strong>Amount:</strong> ₹${invoice.amount}</li>
-                      <li><strong>Due Date:</strong> ${new Date(invoice.dueDate).toLocaleDateString()}</li>
-                      <li><strong>Days Overdue:</strong> ${Math.ceil((new Date() - new Date(invoice.dueDate)) / (1000 * 60 * 60 * 24))} days</li>
-                    </ul>
-                  </div>
-                  
-                  <p>Please process the payment at your earliest convenience.</p>
-                  <p>Best regards,<br>${user.displayName}</p>
+                  <hr style="margin-top: 30px;">
+                  <p style="font-size: 12px; color: #666;">
+                    This is an automated reminder. Please contact ${user.email} if you have any questions.
+                  </p>
                 </div>
               `
             };

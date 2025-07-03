@@ -3,7 +3,9 @@ const {
   getMailConfig, 
   configureGmail, 
   configureSMTP, 
-  removeMailConfig 
+  removeMailConfig,
+  getEmailTemplate,
+  updateEmailTemplate 
 } = require('../controllers/mailConfigController');
 const verifyJWT = require('../middleware/verifyJWT');
 const router = express.Router();
@@ -22,5 +24,11 @@ router.post('/smtp', configureSMTP);
 
 // DELETE /mail-config - Remove mail configuration
 router.delete('/', removeMailConfig);
+
+// GET /mail-config/template - Get email template
+router.get('/template', getEmailTemplate);
+
+// PUT /mail-config/template - Update email template
+router.put('/template', updateEmailTemplate);
 
 module.exports = router;

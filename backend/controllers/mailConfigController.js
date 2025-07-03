@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const MailConfig = require('../models/MailConfig');
 const axios = require('axios');
+const bcrypt = require('bcrypt'); // Add bcrypt import
 
 // Get mail configuration status
 const getMailConfig = async (req, res) => {
@@ -113,6 +114,12 @@ const configureSMTP = async (req, res) => {
       return res.status(400).json({ message: 'All SMTP fields are required' });
     }
     
+    // Encrypt the app password with bcrypt
+    const saltRounds = 12; // Higher salt rounds for better security
+    const hashedPassword = await bcrypt.hash(pass, saltRounds);
+    
+    console.log('Password encrypted successfully');
+    
     // Determine provider based on host
     let provider = 'smtp';
     if (host.includes('gmail')) {
@@ -130,7 +137,7 @@ const configureSMTP = async (req, res) => {
         host: host,
         port: parseInt(port),
         secure: secure === 'true',
-        pass: pass, // In production, encrypt this
+        pass: hashedPassword, // Store encrypted password
         isConfigured: true
       },
       { 
@@ -181,9 +188,119 @@ const removeMailConfig = async (req, res) => {
   }
 };
 
+// Get email template
+const getEmailTemplate = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const user = await User.findById(userId).populate('mailConfig');
+    
+    if (!user || !user.mailConfig) {
+      return res.json({ 
+        useCustomTemplate: false,
+        customSubject: '',
+        customContent: '',
+        defaultSubject: 'Payment Reminder - Invoice {{invoiceId}}',
+        defaultContent: `
+          <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
+
+          Dear {{clientName}},
+
+          This is a reminder that your invoice is overdue for payment.
+
+          <div style="border-radius: 5px; padding: 10px; background-color: #f9f9f9;">
+            Invoice Details:
+            - Invoice ID: {{invoiceId}}
+            - Amount: ₹{{amount}}
+            - Due Date: {{dueDate}}
+            - Days Overdue: {{daysOverdue}} days
+          </div>
+
+          Please process the payment at your earliest convenience to avoid any late fees.
+          If you have already made the payment, please disregard this message.
+
+          Best regards,
+          {{userName}}`
+        });
+    }
+    
+    const template = user.mailConfig.emailTemplate || {};
+    
+    res.json({
+      useCustomTemplate: template.useCustomTemplate || false,
+      customSubject: template.customSubject || '',
+      customContent: template.customContent || '',
+      defaultSubject: 'Payment Reminder - Invoice {{invoiceId}}',
+      defaultContent: `
+        <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
+        
+        Dear {{clientName}},
+
+        This is a reminder that your invoice is overdue for payment.
+
+        <div style="border-radius: 5px; padding: 10px; background-color: #f9f9f9;">
+          Invoice Details:
+          - Invoice ID: {{invoiceId}}
+          - Amount: ₹{{amount}}
+          - Due Date: {{dueDate}}
+          - Days Overdue: {{daysOverdue}} days
+        </div>
+
+        Please process the payment at your earliest convenience to avoid any late fees.
+        If you have already made the payment, please disregard this message.
+
+        Best regards,
+        {{userName}}`
+    });
+  } catch (error) {
+    console.error('Get email template error:', error);
+    res.status(500).json({ message: 'Error fetching email template', error: error.message });
+  }
+};
+
+// Update email template
+const updateEmailTemplate = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { useCustomTemplate, customSubject, customContent } = req.body;
+    
+    console.log('Updating email template for user:', userId, { useCustomTemplate, customSubject: customSubject ? 'present' : 'missing', customContent: customContent ? 'present' : 'missing' });
+    
+    // Find the user's mail config
+    const user = await User.findById(userId).populate('mailConfig');
+    
+    if (!user || !user.mailConfig) {
+      return res.status(400).json({ message: 'Mail configuration not found. Please configure your email settings first.' });
+    }
+    
+    // Update the email template in MailConfig
+    await MailConfig.findByIdAndUpdate(user.mailConfig._id, {
+      $set: {
+        'emailTemplate.useCustomTemplate': useCustomTemplate || false,
+        'emailTemplate.customSubject': customSubject || '',
+        'emailTemplate.customContent': customContent || ''
+      }
+    });
+    
+    console.log('Email template updated successfully for user:', userId);
+    
+    res.json({ 
+      message: 'Email template updated successfully',
+      useCustomTemplate: useCustomTemplate || false,
+      customSubject: customSubject || '',
+      customContent: customContent || ''
+    });
+  } catch (error) {
+    console.error('Update email template error:', error);
+    res.status(500).json({ message: 'Error updating email template', error: error.message });
+  }
+};
+
 module.exports = {
   getMailConfig,
   configureGmail,
   configureSMTP,
-  removeMailConfig
+  removeMailConfig,
+  getEmailTemplate,
+  updateEmailTemplate
 };

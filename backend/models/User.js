@@ -8,7 +8,9 @@ const userSchema = new mongoose.Schema({
   profilePhoto: { type: String },
   createdAt: { type: Date, default: Date.now },
   sendReminders: { type: Boolean, default: false },
-  mailConfig: { type: mongoose.Schema.Types.ObjectId, ref: 'MailConfig' } // Add mail configuration
+  mailConfig: { type: mongoose.Schema.Types.ObjectId, ref: 'MailConfig' }, // Add mail configuration
+  lastReminderSent: { type: Date, default: null } // Track last reminder sent time
+}, {
 });
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
