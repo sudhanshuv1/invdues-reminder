@@ -29,7 +29,9 @@ const rawBaseQuery = fetchBaseQuery({
         endpoint === 'startReminders' ||
         endpoint === 'stopReminders' ||
         endpoint === 'getReminderStatus' ||
-        endpoint === 'sendImmediateReminders'
+        endpoint === 'sendImmediateReminders' ||
+        endpoint === 'getEmailTemplate' ||
+        endpoint === 'updateEmailTemplate'
       ) {
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
@@ -260,6 +262,21 @@ export const apiSlice = createApi({
       }),
     }),
 
+    getEmailTemplate: builder.query({
+      query: () => ({
+        url: '/mail-config/template',
+        method: 'GET',
+      }),
+    }),
+
+    updateEmailTemplate: builder.mutation({
+      query: (body) => ({
+        url: '/mail-config/template',
+        method: 'PUT',
+        body,
+      }),
+    }),
+
   }),
 });
 
@@ -288,4 +305,6 @@ export const {
   useStopRemindersMutation,
   useGetReminderStatusQuery,
   useSendImmediateRemindersMutation,
+  useGetEmailTemplateQuery,
+  useUpdateEmailTemplateMutation,
 } = apiSlice;
