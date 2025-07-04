@@ -3,12 +3,49 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "npm run test:backend && npm run test:frontend",
+    "test:backend": "jest --config=tests/jest.backend.config.js",
+    "test:frontend": "vitest run --config=tests/vitest.frontend.config.js",
+    "test:watch": "npm run test:backend:watch",
+    "test:backend:watch": "jest --config=tests/jest.backend.config.js --watch",
+    "test:frontend:watch": "vitest --config=tests/vitest.frontend.config.js",
+    "test:coverage": "npm run test:backend:coverage && npm run test:frontend:coverage",
+    "test:backend:coverage": "jest --config=tests/jest.backend.config.js --coverage",
+    "test:frontend:coverage": "vitest run --config=tests/vitest.frontend.config.js --coverage"
   },
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "An invoice reminder and follow-up app that uses Zapier integration to automate workflows. It is deployed at: https://invdues-reminder.vercel.app/",
   "dependencies": {
-    "concurrently": "^9.1.2"
-  }
+    "bcrypt": "^6.0.0",
+    "concurrently": "^9.1.2",
+    "dotenv": "^17.0.1",
+    "express": "^5.1.0",
+    "mongoose": "^8.16.1",
+    "nodemailer": "^7.0.4"
+  },
+  "directories": {
+    "test": "tests"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^30.0.0",
+    "happy-dom": "^18.0.1",
+    "jest": "^30.0.4",
+    "jsdom": "^26.1.0",
+    "mongodb-memory-server": "^10.1.4",
+    "supertest": "^7.1.1",
+    "vitest": "^3.2.4"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sudhanshuv1/invdues-reminder.git"
+  },
+  "keywords": [],
+  "bugs": {
+    "url": "https://github.com/sudhanshuv1/invdues-reminder/issues"
+  },
+  "homepage": "https://github.com/sudhanshuv1/invdues-reminder#readme"
 }
