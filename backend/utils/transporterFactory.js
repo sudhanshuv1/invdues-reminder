@@ -1,6 +1,7 @@
 const nodemailer = require('nodemailer');
 const { google } = require('googleapis');
 const User = require('../models/User');
+const { decrypt } = require('./encryption'); // Import decryption utility
 
 async function makeTransport(userId) {
   try {
@@ -41,13 +42,17 @@ async function makeTransport(userId) {
       });
     } else {
       // SMTP approach (including Gmail SMTP)
+
+      const decryptedPassword = decrypt(mailConfig.pass); // Decrypt the password
+
+
       const transportConfig = {
         host: mailConfig.host,
         port: mailConfig.port,
         secure: mailConfig.secure,
         auth: {
           user: mailConfig.user,
-          pass: mailConfig.pass
+          pass: decryptedPassword // Use decrypted password
         }
       };
 

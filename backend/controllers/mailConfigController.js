@@ -2,6 +2,7 @@ const User = require('../models/User');
 const MailConfig = require('../models/MailConfig');
 const axios = require('axios');
 const bcrypt = require('bcrypt'); // Add bcrypt import
+const { encrypt, decrypt } = require('../utils/encryption'); // Import encryption utility
 
 // Get mail configuration status
 const getMailConfig = async (req, res) => {
@@ -113,12 +114,11 @@ const configureSMTP = async (req, res) => {
     if (!host || !port || !user || !pass) {
       return res.status(400).json({ message: 'All SMTP fields are required' });
     }
-    
-    // Encrypt the app password with bcrypt
-    const saltRounds = 12; // Higher salt rounds for better security
-    const hashedPassword = await bcrypt.hash(pass, saltRounds);
+
+    const encryptedPassword = encrypt(pass);
     
     console.log('Password encrypted successfully');
+    
     
     // Determine provider based on host
     let provider = 'smtp';
@@ -137,7 +137,7 @@ const configureSMTP = async (req, res) => {
         host: host,
         port: parseInt(port),
         secure: secure === 'true',
-        pass: hashedPassword, // Store encrypted password
+        pass: encryptedPassword, // Store encrypted password
         isConfigured: true
       },
       { 
