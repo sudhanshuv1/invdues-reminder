@@ -1,13 +1,13 @@
 import { createSlice } from '@reduxjs/toolkit';
 
-// Check for saved theme preference or default to 'light'
+// Check for saved theme preference or default to 'dark'
 const getInitialTheme = () => {
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme) {
     return savedTheme;
   }
-  // Check system preference
-  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  // Default to dark theme instead of checking system preference
+  return 'dark';
 };
 
 const initialState = {
