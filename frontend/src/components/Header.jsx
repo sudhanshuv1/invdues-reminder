@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useLogoutMutation } from '../features/apiSlice';
 import { selectCurrentUser, selectIsAuthenticated } from '../features/authSlice';
@@ -14,6 +14,7 @@ const Header = () => {
   const currentTheme = useSelector(selectCurrentTheme);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
 
   // Apply theme on component mount and theme change
   useEffect(() => {
@@ -43,32 +44,55 @@ const Header = () => {
     dispatch(toggleTheme());
   };
 
+  // Helper function to check if a link is active
+  const isActiveLink = (path) => {
+    console.log('Checking active link for:', path, 'Current pathname:', location.pathname); // Debug log
+    
+    if (path === '/') {
+      // Home link is active only on exact root path
+      return location.pathname === '/';
+    }
+    // Other links are active if current path starts with the link path
+    return location.pathname.startsWith(path);
+  };
+
   return (
-    <header className="text-gray-900 dark:text-gray-300 bg-gradient-to-r from-cyan-300 to-fuchsia-300 dark:from-cyan-800 dark:to-fuchsia-800 shadow-md transition-colors duration-200">
-      <nav className="container mx-auto px-4 py-4 flex shadow-md justify-between items-center">
+    <header className="text-gray-900 font-sans dark:text-gray-300 bg-gradient-to-r from-cyan-300 to-fuchsia-300 dark:from-cyan-800 dark:to-fuchsia-800 shadow-md transition-colors duration-200">
+      <nav className="container mx-auto px-16 py-4 flex shadow-md justify-between items-center">
         
         <div className="text-3xl font-bold">
           <Link to="/" className="flex items-center">
-            InvDues Reminder
+            invdues-reminder
           </Link>
         </div>
 
         
         <div className="hidden md:flex space-x-6 text-lg">
-          <Link to="/" className="hover:font-bold relative group">
-            Home
-            <span className="absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+          <Link to="/" className={`hover:font-bold relative group ${isActiveLink('/') ? 'font-bold' : ''}`}>
+            home
+            <span className={`absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 transition-transform origin-left ${
+              isActiveLink('/') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+            }`}></span>
           </Link>
-          <Link to="/features" className="hover:font-bold relative group">
-            Features
-            <span className="absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+          <Link to="/features" className={`hover:font-bold relative group ${isActiveLink('/features') ? 'font-bold' : ''}`}>
+            features
+            <span className={`absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 transition-transform origin-left ${
+              isActiveLink('/features') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+            }`}></span>
           </Link>
-          <Link to="/pricing" className="hover:font-bold relative group">
-            Pricing
-            <span className="absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
+          <Link to="/pricing" className={`hover:font-bold relative group ${isActiveLink('/pricing') ? 'font-bold' : ''}`}>
+            pricing
+            <span className={`absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 transition-transform origin-left ${
+              isActiveLink('/pricing') ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+            }`}></span>
           </Link>
-          <Link to="/contact" className="hover:font-bold relative group">
-            Contact
+          <Link
+            to="https://sudhanshu-tiwari.netlify.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:font-bold relative group"
+          >
+            contact
             <span className="absolute left-0 top-7 w-full h-0.5 bg-gray-900 dark:bg-gray-100 scale-x-0 group-hover:scale-x-100 transition-transform origin-left"></span>
           </Link>
         </div>
@@ -82,12 +106,6 @@ const Header = () => {
                 className="px-4 py-2 hover:cursor-pointer bg-white dark:bg-gray-700 text-blue-600 dark:text-blue-400 rounded-md hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors duration-200"
               >
                 Sign In
-              </Link>
-              <Link
-                to="/signup"
-                className="px-4 py-2 hover:cursor-pointer bg-yellow-400 dark:bg-yellow-500 text-blue-600 dark:text-gray-900 rounded-md hover:bg-yellow-300 dark:hover:bg-yellow-400 transition-colors duration-200"
-              >
-                Sign Up
               </Link>
             </>
           ) : (

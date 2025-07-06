@@ -4,7 +4,6 @@ import Wrapper from './components/Wrapper';
 import Home from './pages/Home';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
-import Contact from './pages/Contact';
 import SignIn from './pages/SignIn';
 import SignUp from './pages/SignUp';
 import Dashboard from './pages/Dashboard';
@@ -23,7 +22,16 @@ function App() {
             <Route index element={<Home />} />
             <Route path="features" element={<Features />} />
             <Route path="pricing" element={<Pricing />} />
-            <Route path="contact" element={<Contact />} />
+            <Route path="contact" element={
+              <a
+                href="https://sudhanshu-tiwari.netlify.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline"
+              >
+                sudhanshu-tiwari.netlify.app
+              </a>
+            } />
             <Route path="signin" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
             <Route path="dashboard">

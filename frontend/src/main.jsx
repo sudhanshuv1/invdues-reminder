@@ -23,11 +23,10 @@ const ThemeInitializer = ({ children }) => {
   return children;
 };
 
-// Initialize theme on first load
+// Initialize theme on first load - default to dark
 const initializeTheme = () => {
   const savedTheme = localStorage.getItem('theme');
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const initialTheme = savedTheme || systemTheme;
+  const initialTheme = savedTheme || 'dark'; // Default to dark theme
   
   if (initialTheme === 'dark') {
     document.documentElement.classList.add('dark');
