@@ -1,79 +1,112 @@
-/**
- * Process email template with dynamic values
- * @param {string} template - Template string with placeholders
- * @param {object} data - Data to replace placeholders
- * @returns {string} - Processed template
- */
-function processTemplate(template, data) {
-  if (!template) return '';
-  
-  return template
-    .replace(/\{\{invoiceId\}\}/g, data.invoiceId || '')
-    .replace(/\{\{clientName\}\}/g, data.clientName || '')
-    .replace(/\{\{amount\}\}/g, data.amount || '')
-    .replace(/\{\{dueDate\}\}/g, data.dueDate || '')
-    .replace(/\{\{daysOverdue\}\}/g, data.daysOverdue || '')
-    .replace(/\{\{userName\}\}/g, data.userName || '');
+// backend/utils/emailTemplateProcessor.js
+const he = require('he'); // HTML entity encoder/decoder
+
+function formatCurrency(amount) {
+  return `₹${amount}`;
 }
 
-/**
- * Get email content based on template configuration
- * @param {object} mailConfig - Mail configuration with template settings
- * @param {object} invoice - Invoice data
- * @param {object} user - User data
- * @returns {object} - Subject and content
- */
+function formatCurrencyForTemplate(amount, templateText, placeholder) {
+  // Check if the template already contains currency symbol before the placeholder
+  const regex = new RegExp(`₹\\s*\\{\\{${placeholder}\\}\\}`, 'g');
+  if (regex.test(templateText)) {
+    // Template already has ₹, just return the amount
+    return amount.toString();
+  }
+  // Template doesn't have ₹, add it
+  return `₹${amount}`;
+}
+
+function formatDate(date) {
+  if (!date) return '';
+  return new Date(date).toLocaleDateString('en-GB'); // DD/MM/YYYY format
+}
+
+function escapeHtml(text) {
+  if (!text) return text;
+  return he.encode(String(text));
+}
+
+function calculateDaysOverdue(dueDate) {
+  const today = new Date();
+  const due = new Date(dueDate);
+  const diffTime = today - due;
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.max(0, diffDays);
+}
+
 function getEmailContent(mailConfig, invoice, user) {
-  const templateData = {
-    invoiceId: invoice._id,
-    clientName: invoice.clientName,
-    amount: invoice.amount,
-    dueDate: new Date(invoice.dueDate).toLocaleDateString(),
-    daysOverdue: Math.ceil((new Date() - new Date(invoice.dueDate)) / (1000 * 60 * 60 * 24)),
-    userName: user.displayName
-  };
+  // Escape all user inputs to prevent XSS
+  const safeClientName = escapeHtml(invoice.clientName);
+  const safeInvoiceId = escapeHtml(invoice._id);
+  const safeUserName = escapeHtml(user.displayName || '');
+  const formattedDueDate = formatDate(invoice.dueDate);
+  const daysOverdue = calculateDaysOverdue(invoice.dueDate);
 
-  const template = mailConfig.emailTemplate || {};
-  
-  if (template.useCustomTemplate && template.customSubject && template.customContent) {
-    // Use custom template
+  // Check if custom template is enabled and available
+  if (mailConfig.emailTemplate && 
+      mailConfig.emailTemplate.useCustomTemplate && 
+      mailConfig.emailTemplate.customSubject && 
+      mailConfig.emailTemplate.customContent) {
+    
+    // Smart currency formatting based on template content
+    const formattedAmountForSubject = formatCurrencyForTemplate(
+      invoice.amount, 
+      mailConfig.emailTemplate.customSubject, 
+      'amount'
+    );
+    const formattedAmountForContent = formatCurrencyForTemplate(
+      invoice.amount, 
+      mailConfig.emailTemplate.customContent, 
+      'amount'
+    );
+
+    // Replace variables in custom template
+    let customSubject = mailConfig.emailTemplate.customSubject
+      .replace(/\{\{clientName\}\}/g, safeClientName)
+      .replace(/\{\{invoiceId\}\}/g, safeInvoiceId)
+      .replace(/\{\{amount\}\}/g, formattedAmountForSubject)
+      .replace(/\{\{dueDate\}\}/g, formattedDueDate)
+      .replace(/\{\{daysOverdue\}\}/g, daysOverdue)
+      .replace(/\{\{userName\}\}/g, safeUserName);
+
+    let customContent = mailConfig.emailTemplate.customContent
+      .replace(/\{\{clientName\}\}/g, safeClientName)
+      .replace(/\{\{invoiceId\}\}/g, safeInvoiceId)
+      .replace(/\{\{amount\}\}/g, formattedAmountForContent)
+      .replace(/\{\{dueDate\}\}/g, formattedDueDate)
+      .replace(/\{\{daysOverdue\}\}/g, daysOverdue)
+      .replace(/\{\{userName\}\}/g, safeUserName);
+
     return {
-      subject: processTemplate(template.customSubject, templateData),
-      content: processTemplate(template.customContent, templateData)
-    };
-  } else {
-    // Use default template
-    const defaultSubject = `Payment Reminder - Invoice ${templateData.invoiceId}`;
-    const defaultContent = `
-
-    <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
-
-    Dear ${templateData.clientName},
-
-    This is a reminder that your invoice is overdue for payment.
-
-    <div style="border-radius: 5px; padding: 10px; background-color: #f9f9f9;">
-      Invoice Details:
-      - Invoice ID: ${templateData.invoiceId}
-      - Amount: ₹${templateData.amount}
-      - Due Date: ${templateData.dueDate}
-      - Days Overdue: ${templateData.daysOverdue} days
-    </div>
-
-    Please process the payment at your earliest convenience to avoid any late fees.
-    If you have already made the payment, please disregard this message.
-
-    Best regards,
-    ${templateData.userName}`;
-
-    return {
-      subject: defaultSubject,
-      content: defaultContent
+      subject: customSubject,
+      content: customContent
     };
   }
+
+  // Default template - always use formatted currency
+  const formattedAmount = formatCurrency(invoice.amount);
+  const defaultSubject = `Invoice ${safeInvoiceId} for ${safeClientName} - ${formattedAmount} due ${formattedDueDate} (${daysOverdue > 0 ? `${daysOverdue} days` : ''} overdue) - ${safeUserName}`;
+  
+  const defaultContent = `
+<p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
+Dear ${safeClientName},
+This is a reminder that your invoice is overdue for payment.
+<div style="border-radius: 5px; padding: 10px; background-color: #f9f9f9;">
+  Invoice Details:
+  - Invoice ID: ${safeInvoiceId}
+  - Amount: ${formattedAmount}
+  - Due Date: ${formattedDueDate}
+  - Days Overdue: ${daysOverdue} days
+</div>
+Please process the payment at your earliest convenience to avoid any late fees.
+If you have already made the payment, please disregard this message.
+Best regards,
+${safeUserName}`;
+
+  return {
+    subject: defaultSubject,
+    content: defaultContent
+  };
 }
 
-module.exports = {
-  processTemplate,
-  getEmailContent
-};
+module.exports = { getEmailContent, formatCurrency, formatDate, escapeHtml };

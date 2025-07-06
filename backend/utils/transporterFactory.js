@@ -29,7 +29,7 @@ async function makeTransport(userId) {
       
       const { token: accessToken } = await oAuth2.getAccessToken();
 
-      return nodemailer.createTransport({
+      return nodemailer.createTransporter({
         service: 'gmail',
         auth: {
           type: 'OAuth2',
@@ -68,7 +68,7 @@ async function makeTransport(userId) {
         user: transportConfig.auth.user
       });
 
-      return nodemailer.createTransport(transportConfig); 
+      return nodemailer.createTransporter(transportConfig); 
     }
   } catch (error) {
     console.error('Error creating mail transporter:', error);
