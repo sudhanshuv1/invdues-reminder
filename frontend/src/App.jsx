@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Wrapper from './components/Wrapper';
+import ProtectedRoute from './components/ProtectedRoute';
 import Home from './pages/Home';
 import Features from './pages/Features';
 import Pricing from './pages/Pricing';
@@ -34,15 +35,51 @@ function App() {
             } />
             <Route path="signin" element={<SignIn />} />
             <Route path="signup" element={<SignUp />} />
-            <Route path="dashboard">
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="dashboard" element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }>
               <Route index element={<Dashboard />} />
-              <Route path="new-invoice" element={<CreateInvoice />} />
-              <Route path="edit-invoice/:id" element={<CreateInvoice />} />
-              <Route path="oauth-consent" element={<OAuthConsent/>} />
-              <Route path="mail-settings" element={<MailSettings />} />
-              <Route path="reminder-control" element={<ReminderControl />} />
-              <Route path="email-templates" element={<EmailTemplateSettings />} />
             </Route>
+            
+            <Route path="dashboard/new-invoice" element={
+              <ProtectedRoute>
+                <CreateInvoice />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/edit-invoice/:id" element={
+              <ProtectedRoute>
+                <CreateInvoice />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/oauth-consent" element={
+              <ProtectedRoute>
+                <OAuthConsent />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/mail-settings" element={
+              <ProtectedRoute>
+                <MailSettings />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/reminder-control" element={
+              <ProtectedRoute>
+                <ReminderControl />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/email-templates" element={
+              <ProtectedRoute>
+                <EmailTemplateSettings />
+              </ProtectedRoute>
+            } />
           </Route>
         </Routes>
       </div>
