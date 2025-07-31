@@ -13,6 +13,7 @@ import OAuthConsent from './pages/OAuthConsent';
 import MailSettings from './pages/MailSettings';
 import ReminderControl from './pages/ReminderControl';
 import EmailTemplateSettings from './pages/EmailTemplateSettings';
+import Profile from './pages/Profile';
 
 function App() {
   return (
@@ -78,6 +79,12 @@ function App() {
             <Route path="dashboard/email-templates" element={
               <ProtectedRoute>
                 <EmailTemplateSettings />
+              </ProtectedRoute>
+            } />
+            
+            <Route path="dashboard/profile" element={
+              <ProtectedRoute>
+                <Profile />
               </ProtectedRoute>
             } />
           </Route>

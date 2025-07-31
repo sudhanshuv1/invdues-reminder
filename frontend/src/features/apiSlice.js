@@ -31,7 +31,12 @@ const rawBaseQuery = fetchBaseQuery({
         endpoint === 'getReminderStatus' ||
         endpoint === 'sendImmediateReminders' ||
         endpoint === 'getEmailTemplate' ||
-        endpoint === 'updateEmailTemplate'
+        endpoint === 'updateEmailTemplate' ||
+        endpoint === 'getUserProfile' ||
+        endpoint === 'updateUserProfile' ||
+        endpoint === 'changePassword' ||
+        endpoint === 'deleteUserAccount' ||
+        endpoint === 'getUserStats'
       ) {
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
@@ -277,6 +282,44 @@ export const apiSlice = createApi({
       }),
     }),
 
+    // Profile management endpoints
+    getUserProfile: builder.query({
+      query: () => ({
+        url: '/user/profile',
+        method: 'GET',
+      }),
+    }),
+
+    updateUserProfile: builder.mutation({
+      query: (profileData) => ({
+        url: '/user/profile',
+        method: 'PATCH',
+        body: profileData,
+      }),
+    }),
+
+    changePassword: builder.mutation({
+      query: (passwordData) => ({
+        url: '/user/change-password',
+        method: 'PATCH',
+        body: passwordData,
+      }),
+    }),
+
+    deleteUserAccount: builder.mutation({
+      query: () => ({
+        url: '/user/account',
+        method: 'DELETE',
+      }),
+    }),
+
+    getUserStats: builder.query({
+      query: () => ({
+        url: '/user/stats',
+        method: 'GET',
+      }),
+    }),
+
   }),
 });
 
@@ -307,4 +350,10 @@ export const {
   useSendImmediateRemindersMutation,
   useGetEmailTemplateQuery,
   useUpdateEmailTemplateMutation,
+  // Profile management hooks
+  useGetUserProfileQuery,
+  useUpdateUserProfileMutation,
+  useChangePasswordMutation,
+  useDeleteUserAccountMutation,
+  useGetUserStatsQuery,
 } = apiSlice;
