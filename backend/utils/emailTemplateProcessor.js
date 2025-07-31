@@ -90,6 +90,7 @@ function getEmailContent(mailConfig, invoice, user) {
   const defaultContent = `
 <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
 Dear ${safeClientName},
+<br>
 This is a reminder that your invoice is overdue for payment.
 <div style="border-radius: 5px; padding: 10px; background-color: #f9f9f9;">
   Invoice Details:
@@ -100,6 +101,7 @@ This is a reminder that your invoice is overdue for payment.
 </div>
 Please process the payment at your earliest convenience to avoid any late fees.
 If you have already made the payment, please disregard this message.
+<br>
 Best regards,
 ${safeUserName}`;
 

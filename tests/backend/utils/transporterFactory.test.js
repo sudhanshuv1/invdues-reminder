@@ -7,7 +7,7 @@ const { createTestUser, createTestMailConfig } = require('../../utils/testHelper
 
 // Mock nodemailer
 jest.mock('nodemailer', () => ({
-  createTransporter: jest.fn(() => ({
+  createTransport: jest.fn(() => ({
     sendMail: jest.fn()
   }))
 }));
@@ -34,7 +34,7 @@ describe('Transporter Factory', () => {
     
     expect(transporter).toBeDefined();
     // Verify that the transporter was created (mocked)
-    expect(require('nodemailer').createTransporter).toHaveBeenCalled();
+    expect(require('nodemailer').createTransport).toHaveBeenCalled();
   });
 
   it('should handle Gmail OAuth configuration', async () => {

@@ -205,6 +205,7 @@ const getEmailTemplate = async (req, res) => {
           <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
 
           Dear {{clientName}},
+          <br>
 
           This is a reminder that your invoice is overdue for payment.
 
@@ -219,6 +220,7 @@ const getEmailTemplate = async (req, res) => {
           Please process the payment at your earliest convenience to avoid any late fees.
           If you have already made the payment, please disregard this message.
 
+          <br>
           Best regards,
           {{userName}}`
         });
@@ -235,6 +237,7 @@ const getEmailTemplate = async (req, res) => {
         <p style="font-size: 18px; font-weight: bold;">Payment Reminder</p>
         
         Dear {{clientName}},
+        <br>
 
         This is a reminder that your invoice is overdue for payment.
 
@@ -249,6 +252,7 @@ const getEmailTemplate = async (req, res) => {
         Please process the payment at your earliest convenience to avoid any late fees.
         If you have already made the payment, please disregard this message.
 
+        <br>
         Best regards,
         {{userName}}`
     });
