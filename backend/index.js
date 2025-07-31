@@ -53,6 +53,7 @@ app.use('/invoice', require('./routes/invoiceRoutes'));
 app.use('/zapier', require('./routes/zapierRoutes'));
 app.use('/reminder', require('./routes/reminderRoutes'));
 app.use('/mail-config', require('./routes/mailConfigRoutes'));
+app.use('/subscription', require('./routes/subscriptionRoutes'));
 
 // Default route.
 app.get('/', (req, res) => {

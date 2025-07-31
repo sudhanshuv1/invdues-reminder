@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const User = require('../models/User');
 const Invoice = require('../models/Invoice');
 const MailConfig = require('../models/MailConfig');
+const Subscription = require('../models/Subscription');
 
 // @desc Check for existing email
 // @route POST /user/email
@@ -295,11 +296,33 @@ const getUserStats = async (req, res) => {
         // Check if user has mail configuration
         const mailConfig = await MailConfig.findOne({ userId: id });
 
+        // Get subscription information
+        let subscription = await Subscription.findOne({ userId: id });
+        if (!subscription) {
+          // Create free trial subscription if none exists
+          subscription = new Subscription({
+            userId: id,
+            plan: 'free',
+            status: 'trial'
+          });
+          await subscription.save();
+        }
+
+        // Check if trial has expired
+        if (subscription.status === 'trial' && new Date() > subscription.trialEnd) {
+          subscription.status = 'expired';
+          subscription.plan = 'free';
+          await subscription.save();
+        }
+
         const stats = {
             totalInvoices: totalInvoices,
             totalRevenue: totalRevenue,
             hasMailConfig: !!mailConfig,
-            currentPlan: 'Free' // For now, assuming free plan
+            currentPlan: subscription.plan,
+            subscriptionStatus: subscription.status,
+            trialEndsAt: subscription.trialEnd,
+            subscriptionEndsAt: subscription.currentPeriodEnd
         };
 
         console.log('Final stats being sent:', stats);

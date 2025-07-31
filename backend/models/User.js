@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema({
   createdAt: { type: Date, default: Date.now },
   sendReminders: { type: Boolean, default: false },
   mailConfig: { type: mongoose.Schema.Types.ObjectId, ref: 'MailConfig' }, // Add mail configuration
+  subscription: { type: mongoose.Schema.Types.ObjectId, ref: 'Subscription' }, // Add subscription reference
   lastReminderSent: { type: Date, default: null } // Track last reminder sent time
 }, {
 });
