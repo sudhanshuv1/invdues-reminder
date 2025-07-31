@@ -54,6 +54,13 @@ const EmailTemplateSettings = () => {
     }
   };
 
+  const handleReset = () => {
+    // Reset to original saved values from templateData
+    setUseCustomTemplate(templateData?.useCustomTemplate || false);
+    setCustomSubject(templateData?.customSubject || '');
+    setCustomContent(templateData?.customContent || '');
+  };
+
   if (isLoading) {
     return (
       <DashboardLayout>
@@ -220,11 +227,7 @@ const EmailTemplateSettings = () => {
                     
                     <button
                       type="button"
-                      onClick={() => {
-                        setUseCustomTemplate(templateData?.useCustomTemplate || false);
-                        setCustomSubject(templateData?.customSubject || '');
-                        setCustomContent(templateData?.customContent || '');
-                      }}
+                      onClick={handleReset}
                       className="px-6 py-3 rounded-lg font-medium bg-gray-500 hover:bg-gray-600 text-white"
                     >
                       Reset

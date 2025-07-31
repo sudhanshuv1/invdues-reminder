@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { 
   useGetUserProfileQuery, 
   useUpdateUserProfileMutation, 
   useChangePasswordMutation,
   useDeleteUserAccountMutation,
-  useGetUserStatsQuery 
+  useGetUserStatsQuery,
+  useGetCurrentSubscriptionQuery 
 } from '../features/apiSlice';
 import { selectCurrentUser } from '../features/authSlice';
 import { logout as logoutAction } from '../features/authSlice';
@@ -36,6 +38,7 @@ const Profile = () => {
     refetchOnFocus: true,
     refetchOnReconnect: true
   });
+  const { data: subscriptionData, isLoading: loadingSubscription } = useGetCurrentSubscriptionQuery();
   const [updateProfile, { isLoading: updatingProfile }] = useUpdateUserProfileMutation();
   const [changePassword, { isLoading: changingPassword }] = useChangePasswordMutation();
   const [deleteAccount, { isLoading: deletingAccount }] = useDeleteUserAccountMutation();
@@ -207,7 +210,7 @@ const Profile = () => {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
             <div className="flex items-center justify-between">
               <div>
@@ -255,13 +258,41 @@ const Profile = () => {
               </div>
             </div>
           </div>
+
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-gray-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Current Plan</p>
+                <p className={`text-2xl font-bold ${
+                  subscriptionData?.plan === 'free' ? 'text-gray-600' :
+                  subscriptionData?.plan === 'pro' ? 'text-blue-600' :
+                  'text-purple-600'
+                }`}>
+                  {subscriptionData?.plan ? subscriptionData.plan.charAt(0).toUpperCase() + subscriptionData.plan.slice(1) : 'Free'}
+                </p>
+              </div>
+              <div className={`p-3 ${
+                subscriptionData?.plan === 'free' ? 'bg-gray-100 dark:bg-gray-900' :
+                subscriptionData?.plan === 'pro' ? 'bg-blue-100 dark:bg-blue-900' :
+                'bg-purple-100 dark:bg-purple-900'
+              } rounded-lg`}>
+                <svg className={`w-8 h-8 ${
+                  subscriptionData?.plan === 'free' ? 'text-gray-600 dark:text-gray-400' :
+                  subscriptionData?.plan === 'pro' ? 'text-blue-600 dark:text-blue-400' :
+                  'text-purple-600 dark:text-purple-400'
+                }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Tab Navigation */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
           <div className="border-b border-gray-200 dark:border-gray-700">
             <nav className="flex space-x-8 px-6">
-              {['profile', 'security', 'preferences'].map((tab) => (
+              {['profile', 'security', 'subscription', 'preferences'].map((tab) => (
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab)}
@@ -414,6 +445,100 @@ const Profile = () => {
                     Delete Account
                   </button>
                 </div>
+              </div>
+            )}
+
+            {/* Subscription Tab */}
+            {activeTab === 'subscription' && (
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  Subscription Management
+                </h3>
+                
+                {loadingSubscription ? (
+                  <div className="flex justify-center items-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {/* Current Plan Card */}
+                    <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-gray-700 dark:to-gray-800 rounded-xl p-6 border border-blue-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                            {subscriptionData?.plan ? subscriptionData.plan.charAt(0).toUpperCase() + subscriptionData.plan.slice(1) : 'Free'} Plan
+                          </h4>
+                          <p className="text-gray-600 dark:text-gray-400 mt-1">
+                            {subscriptionData?.status === 'active' && subscriptionData?.currentPeriodEnd && (
+                              `Active until ${new Date(subscriptionData.currentPeriodEnd).toLocaleDateString()}`
+                            )}
+                            {subscriptionData?.status === 'trialing' && subscriptionData?.trialEnd && (
+                              `Trial ends on ${new Date(subscriptionData.trialEnd).toLocaleDateString()}`
+                            )}
+                            {(!subscriptionData || subscriptionData?.plan === 'free') && 'Free plan with basic features'}
+                          </p>
+                        </div>
+                        <div className={`px-3 py-1 rounded-full text-sm font-medium ${
+                          subscriptionData?.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+                          subscriptionData?.status === 'trialing' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+                          'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
+                        }`}>
+                          {subscriptionData?.status ? subscriptionData.status.charAt(0).toUpperCase() + subscriptionData.status.slice(1) : 'Free'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Billing Information */}
+                    {subscriptionData && subscriptionData.plan !== 'free' && (
+                      <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                        <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Billing Information</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Billing Period</p>
+                            <p className="font-medium text-gray-900 dark:text-gray-100">
+                              {subscriptionData.billingPeriod === 'monthly' ? 'Monthly' : 'Yearly'}
+                            </p>
+                          </div>
+                          {subscriptionData.amount && (
+                            <div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">Amount</p>
+                              <p className="font-medium text-gray-900 dark:text-gray-100">
+                                ₹{subscriptionData.amount / 100} / {subscriptionData.billingPeriod === 'monthly' ? 'month' : 'year'}
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Actions */}
+                    <div className="bg-white dark:bg-gray-800 rounded-xl p-6 border border-gray-200 dark:border-gray-700">
+                      <h4 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Actions</h4>
+                      <div className="flex flex-wrap gap-4">
+                        <button
+                          onClick={() => navigate('/pricing')}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                        >
+                          {(!subscriptionData || subscriptionData.plan === 'free') ? 'Upgrade Plan' : 'Change Plan'}
+                        </button>
+                        
+                        {subscriptionData && subscriptionData.plan !== 'free' && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm('Are you sure you want to cancel your subscription? You will still have access until the end of your billing period.')) {
+                                // TODO: Implement cancel subscription
+                                toast.info('Subscription cancellation will be available soon');
+                              }
+                            }}
+                            className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                          >
+                            Cancel Subscription
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

@@ -36,7 +36,14 @@ const rawBaseQuery = fetchBaseQuery({
         endpoint === 'updateUserProfile' ||
         endpoint === 'changePassword' ||
         endpoint === 'deleteUserAccount' ||
-        endpoint === 'getUserStats'
+        endpoint === 'getUserStats' ||
+        endpoint === 'getCurrentSubscription' ||
+        endpoint === 'activateFreePlan' ||
+        endpoint === 'createSubscriptionOrder' ||
+        endpoint === 'createRecurringSubscription' ||
+        endpoint === 'verifyPayment' ||
+        endpoint === 'verifySubscriptionPayment' ||
+        endpoint === 'cancelSubscription'
       ) {
         headers.set('Authorization', `Bearer ${accessToken}`);
       }
@@ -320,6 +327,60 @@ export const apiSlice = createApi({
       }),
     }),
 
+    // Subscription endpoints
+    getCurrentSubscription: builder.query({
+      query: () => ({
+        url: '/subscription',
+        method: 'GET',
+      }),
+    }),
+
+    createSubscriptionOrder: builder.mutation({
+      query: (planData) => ({
+        url: '/subscription/create-order',
+        method: 'POST',
+        body: planData,
+      }),
+    }),
+
+    createRecurringSubscription: builder.mutation({
+      query: (planData) => ({
+        url: '/subscription/create-subscription',
+        method: 'POST',
+        body: planData,
+      }),
+    }),
+
+    verifyPayment: builder.mutation({
+      query: (paymentData) => ({
+        url: '/subscription/verify-payment',
+        method: 'POST',
+        body: paymentData,
+      }),
+    }),
+
+    verifySubscriptionPayment: builder.mutation({
+      query: (paymentData) => ({
+        url: '/subscription/verify-subscription-payment',
+        method: 'POST',
+        body: paymentData,
+      }),
+    }),
+
+    cancelSubscription: builder.mutation({
+      query: () => ({
+        url: '/subscription/cancel',
+        method: 'POST',
+      }),
+    }),
+
+    activateFreePlan: builder.mutation({
+      query: () => ({
+        url: '/subscription/activate-free',
+        method: 'POST',
+      }),
+    }),
+
   }),
 });
 
@@ -356,4 +417,12 @@ export const {
   useChangePasswordMutation,
   useDeleteUserAccountMutation,
   useGetUserStatsQuery,
+  // Subscription management hooks
+  useGetCurrentSubscriptionQuery,
+  useCreateSubscriptionOrderMutation,
+  useCreateRecurringSubscriptionMutation,
+  useVerifyPaymentMutation,
+  useVerifySubscriptionPaymentMutation,
+  useCancelSubscriptionMutation,
+  useActivateFreePlanMutation,
 } = apiSlice;

@@ -1,7 +1,66 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { toast } from 'react-toastify';
+import { selectIsAuthenticated } from '../features/authSlice';
+import { useGetCurrentSubscriptionQuery, useActivateFreePlanMutation } from '../features/apiSlice';
+import SubscriptionManager from '../components/SubscriptionManager';
 
 const Pricing = () => {
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
+  const isAuthenticated = useSelector(selectIsAuthenticated);
+  const navigate = useNavigate();
+  const { data: currentSubscription, refetch: refetchSubscription } = useGetCurrentSubscriptionQuery(undefined, {
+    skip: !isAuthenticated
+  });
+  const [activateFreePlan, { isLoading: isActivatingFree }] = useActivateFreePlanMutation();
+
+  const handlePlanSelect = async (planName) => {
+    if (!isAuthenticated) {
+      // Redirect to sign in
+      navigate('/signin');
+      return;
+    }
+    
+    if (planName.toLowerCase() === 'free') {
+      try {
+        console.log('Attempting to activate free plan...');
+        const result = await activateFreePlan().unwrap();
+        console.log('Free plan activation result:', result);
+        
+        // Refetch subscription data to update the UI
+        await refetchSubscription();
+        
+        toast.success('Successfully switched to Free plan!');
+        navigate('/dashboard');
+      } catch (error) {
+        console.error('Error activating free plan:', error);
+        toast.error(`Failed to activate free plan: ${error?.data?.message || error.message}`);
+        return; // Don't navigate if there's an error
+      }
+      return;
+    }
+    
+    setSelectedPlan(planName.toLowerCase());
+    setShowSubscriptionModal(true);
+  };
+
+  const getButtonText = (plan) => {
+    if (!isAuthenticated) {
+      return plan.name === 'Free' ? 'Get Started Free' : `Start ${plan.name} Trial`;
+    }
+    
+    if (currentSubscription?.plan === plan.name.toLowerCase() && currentSubscription?.status === 'active') {
+      return 'Current Plan';
+    }
+    
+    return plan.buttonText;
+  };
+
+  const isCurrentPlan = (plan) => {
+    return currentSubscription?.plan === plan.name.toLowerCase() && currentSubscription?.status === 'active';
+  };
   const plans = [
     {
       name: "Free",
@@ -155,15 +214,20 @@ const Pricing = () => {
                   </div>
 
                   {/* CTA Button - Reduced padding */}
-                  <Link
-                    to={plan.name === 'Free' ? '/signup' : plan.name === 'Enterprise' ? '/contact' : '/signup'}
-                    className={`w-full px-3 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm ${plan.buttonStyle}`}
+                  <button
+                    onClick={() => handlePlanSelect(plan.name)}
+                    disabled={isCurrentPlan(plan)}
+                    className={`w-full px-3 py-2 rounded-lg font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-sm ${
+                      isCurrentPlan(plan) 
+                        ? 'bg-gray-400 text-white cursor-not-allowed' 
+                        : plan.buttonStyle
+                    }`}
                   >
-                    {plan.buttonText}
+                    {getButtonText(plan)}
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
                     </svg>
-                  </Link>
+                  </button>
                 </div>
               </div>
             ))}
@@ -194,6 +258,17 @@ const Pricing = () => {
           </div>
         </div>
       </div>
+
+      {/* Subscription Modal */}
+      {showSubscriptionModal && selectedPlan && (
+        <SubscriptionManager
+          plan={selectedPlan}
+          onClose={() => {
+            setShowSubscriptionModal(false);
+            setSelectedPlan(null);
+          }}
+        />
+      )}
     </div>
   );
 };
