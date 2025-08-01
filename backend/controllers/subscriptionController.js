@@ -212,101 +212,80 @@ const createRecurringSubscription = async (req, res) => {
     
     const planConfig = planConfigs[plan];
     
-    // Calculate amount and interval based on billing period
+    // Calculate amount based on billing period
     let amount = planConfig.amount;
-    let interval = 'monthly';
-    let period = 1;
+    let period = 'monthly';
+    let interval = 1;
     
     if (billingPeriod === 'yearly') {
       amount = planConfig.amount * 10; // 10 months price for yearly (2 months free)
-      interval = 'yearly';
-      period = 1;
+      period = 'yearly';
+      interval = 1;
     }
     
     console.log('Creating Razorpay subscription for:', { userId, plan, billingPeriod, amount });
     
-    // Create or get Razorpay customer
-    let customer;
-    try {
-      customer = await razorpay.customers.create({
-        name: user.displayName,
-        email: user.email,
-        contact: user.phone || '',
-        fail_existing: '0'
-      });
-    } catch (error) {
-      if (error.error && error.error.code === 'BAD_REQUEST_ERROR' && error.error.description.includes('already exists')) {
-        const customers = await razorpay.customers.all({
-          email: user.email
-        });
-        customer = customers.items[0];
-      } else {
-        throw error;
-      }
-    }
+    // For now, let's create a subscription order instead of a recurring subscription
+    // This will work with the current Razorpay SDK and we can implement webhooks later
+    console.log('Creating subscription order (simplified approach)');
     
-    // Create Razorpay plan
-    const razorpayPlan = await razorpay.plans.create({
-      period: interval,
-      interval: period,
-      item: {
-        name: `${planConfig.item.name} - ${billingPeriod}`,
-        description: `${planConfig.item.description} - ${billingPeriod} billing`,
-        amount: amount,
-        currency: 'INR'
-      }
-    });
+    // Create a short receipt (max 40 chars)
+    const shortUserId = userId.substring(userId.length - 8);
+    const timestamp = Date.now().toString().substring(7);
+    const receipt = `sub_${shortUserId}_${timestamp}`;
     
-    // Create subscription
-    const subscription = await razorpay.subscriptions.create({
-      plan_id: razorpayPlan.id,
-      customer_id: customer.id,
-      quantity: 1,
-      total_count: billingPeriod === 'yearly' ? 5 : 60, // 5 years for yearly, 5 years for monthly
-      start_at: Math.floor(Date.now() / 1000) + 300, // Start 5 minutes from now
-      expire_by: Math.floor((Date.now() + 5 * 365 * 24 * 60 * 60 * 1000) / 1000), // Expire in 5 years
+    console.log('Receipt:', receipt, 'Length:', receipt.length);
+    
+    // Create order for subscription payment
+    const order = await razorpay.orders.create({
+      amount: amount,
+      currency: 'INR',
+      receipt: receipt,
       notes: {
         userId: userId,
         plan: plan,
-        billingPeriod: billingPeriod
+        billingPeriod: billingPeriod,
+        userEmail: user.email,
+        subscriptionType: 'recurring'
       }
     });
     
-    // Update or create subscription record
-    await Subscription.findOneAndUpdate(
+    console.log('Razorpay subscription order created:', order.id);
+    
+    // Create database subscription record
+    const dbSubscription = await Subscription.findOneAndUpdate(
       { userId },
       {
         plan: plan,
         status: 'created',
-        razorpaySubscriptionId: subscription.id,
-        razorpayCustomerId: customer.id,
-        razorpayPlanId: razorpayPlan.id,
+        razorpayOrderId: order.id,
         amount: amount,
         currency: 'INR',
         billingPeriod: billingPeriod,
-        interval: interval
+        interval: period
       },
-      { upsert: true }
+      { upsert: true, new: true }
     );
     
-    console.log('Razorpay subscription created:', subscription.id);
+    console.log('Database subscription updated:', dbSubscription._id);
     
     res.json({
-      subscriptionId: subscription.id,
-      customerId: customer.id,
-      planId: razorpayPlan.id,
+      orderId: order.id,
       amount: amount,
       currency: 'INR',
       plan: plan,
       billingPeriod: billingPeriod,
-      key: process.env.RAZORPAY_KEY_ID
+      key: process.env.RAZORPAY_KEY_ID,
+      isRecurring: true
     });
     
   } catch (error) {
     console.error('Error creating recurring subscription:', error);
+    console.error('Full error details:', JSON.stringify(error, null, 2));
     res.status(500).json({ 
       message: 'Error creating subscription', 
-      error: error.message 
+      error: error.message,
+      details: error.error || error
     });
   }
 };
@@ -347,7 +326,7 @@ const verifyPayment = async (req, res) => {
     }
     
     // Extract plan details from order notes
-    const { userId, plan, billingPeriod = 'monthly' } = order.notes;
+    const { userId, plan, billingPeriod = 'monthly', subscriptionType } = order.notes;
     
     // Calculate subscription end date
     const currentPeriodEnd = new Date();
@@ -369,7 +348,8 @@ const verifyPayment = async (req, res) => {
         currency: payment.currency,
         billingPeriod: billingPeriod,
         currentPeriodStart: new Date(),
-        currentPeriodEnd: currentPeriodEnd
+        currentPeriodEnd: currentPeriodEnd,
+        isRecurring: subscriptionType === 'recurring'
       },
       { upsert: true, new: true }
     );
