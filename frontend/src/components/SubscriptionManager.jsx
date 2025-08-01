@@ -121,28 +121,30 @@ const SubscriptionManager = ({ plan, onClose }) => {
       // Get plan info
       const planInfo = planDetails[plan];
       
-      // Create recurring subscription
+      // Create recurring subscription order (simplified approach)
       const response = await createSubscription({
         plan: plan,
         billingPeriod: billingPeriod
       }).unwrap();
       
-      console.log('Subscription created:', response);
+      console.log('Subscription order created:', response);
       
-      // Configure Razorpay options for subscription
+      // Configure Razorpay options for subscription order (same as one-time payment)
       const options = {
         key: import.meta.env.VITE_RAZORPAY_KEY_ID,
-        subscription_id: response.subscriptionId,
+        amount: response.amount,
+        currency: response.currency,
         name: 'InvDues Reminder',
         description: `${planInfo.name} Plan - ${billingPeriod} subscription`,
+        order_id: response.orderId, // Using orderId instead of subscriptionId
         handler: async function (paymentResponse) {
           try {
             console.log('Subscription payment successful:', paymentResponse);
             
-            // Verify subscription payment
-            const verifyResponse = await verifySubscriptionPayment({
+            // Verify payment (same as one-time payment)
+            const verifyResponse = await verifyPayment({
+              razorpay_order_id: paymentResponse.razorpay_order_id,
               razorpay_payment_id: paymentResponse.razorpay_payment_id,
-              razorpay_subscription_id: paymentResponse.razorpay_subscription_id,
               razorpay_signature: paymentResponse.razorpay_signature,
             }).unwrap();
             
@@ -150,7 +152,7 @@ const SubscriptionManager = ({ plan, onClose }) => {
             
             // Close modal and show success message
             onClose();
-            toast.success('Subscription activated successfully! You will be charged automatically.');
+            toast.success('Subscription activated successfully! We will contact you for auto-renewal setup.');
             
             // Refresh subscription data
             refetch();
