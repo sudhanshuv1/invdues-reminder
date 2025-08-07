@@ -3,9 +3,9 @@
 An invoice reminder and follow-up app with an automated reminder email system for overdue invoices.
 
 This is a MERN stack app that implements:
-- CRUD Operations
+- CRUD Operations for invoice management
 - Authentication using Google OAuth
-- Automation using Zapier
+- An automated reminder email system
 
 ## Local development
 1. Clone the repo and run:
