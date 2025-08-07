@@ -1,13 +1,13 @@
 # InvDues Reminder
 
-An invoice reminder and follow-up app that uses Zapier integration to automate workflows. It is deployed at: https://invdues-reminder.vercel.app/
+An invoice reminder and follow-up app with an automated reminder email system for overdue invoices.
 
 This is a MERN stack app that implements:
 - CRUD Operations
 - Authentication using Google OAuth
 - Automation using Zapier
 
-## To run locally,
+## Local development
 1. Clone the repo and run:
 ```
 cd frontend && npm install
@@ -22,3 +22,13 @@ cd frontend && npm run dev
 cd backend && npm start
 ```
 
+## Live link
+The project is live at : https://invdues-reminder.vercel.app/
+
+## Bugs and Issues
+Have a bug or an issue with this project? [Open a new issue](https://github.com/sudhanshuv1/invdues-reminder/issues) here on GitHub.
+
+## License
+MIT
+
+---
