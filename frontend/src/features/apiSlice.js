@@ -5,8 +5,18 @@ import { setCredentials, logout as logoutAction } from './authSlice';
 const rawBaseQuery = fetchBaseQuery({
   baseUrl: `${import.meta.env.VITE_BACKEND_URL}`,
   credentials: 'include',
-  prepareHeaders: (headers, { endpoint }) => {
+  prepareHeaders: (headers, { endpoint, getState }) => {
     const accessToken = localStorage.getItem('accessToken');
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    
+    // For Google OAuth users, tokens are in HTTP-only cookies, so no Authorization header needed
+    // The cookies will be sent automatically with credentials: 'include'
+    if (user.googleId || (accessToken === 'cookie-based')) {
+      // Don't set Authorization header for Google OAuth users - use cookies instead
+      return headers;
+    }
+    
+    // For email/password authentication, use Authorization header with localStorage token
     if (accessToken) {
       if (
         endpoint === 'createInvoice' ||
@@ -63,13 +73,21 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
       api,
       extraOptions
     );
+    
     if (refreshResult.data?.accessToken) {
-      // Store new access token
-      localStorage.setItem('accessToken', refreshResult.data.accessToken);
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      
+      // For Google OAuth users, tokens are managed via cookies
+      // For email/password users, store in localStorage
+      if (!user.googleId && localStorage.getItem('accessToken') !== 'cookie-based') {
+        localStorage.setItem('accessToken', refreshResult.data.accessToken);
+      }
+      
       api.dispatch(setCredentials({
-        user: JSON.parse(localStorage.getItem('user')), // or fetch user if needed
+        user: user,
         accessToken: refreshResult.data.accessToken,
       }));
+      
       // Retry the original query with new token
       result = await rawBaseQuery(args, api, extraOptions);
     } else {
@@ -85,6 +103,7 @@ const baseQueryWithReauth = async (args, api, extraOptions) => {
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: baseQueryWithReauth,
+  tagTypes: ['EmailTemplate'],
   endpoints: (builder) => ({
     // Login with email and password
     loginWithEmail: builder.mutation({
@@ -92,6 +111,15 @@ export const apiSlice = createApi({
         url: '/auth',
         method: 'POST',
         body: credentials,
+      }),
+    }),
+
+    // Exchange Google OAuth code for tokens
+    exchangeGoogleCode: builder.mutation({
+      query: (code) => ({
+        url: '/auth/google/exchange',
+        method: 'POST',
+        body: { code },
       }),
     }),
 
@@ -279,6 +307,7 @@ export const apiSlice = createApi({
         url: '/mail-config/template',
         method: 'GET',
       }),
+      providesTags: ['EmailTemplate'],
     }),
 
     updateEmailTemplate: builder.mutation({
@@ -287,6 +316,7 @@ export const apiSlice = createApi({
         method: 'PUT',
         body,
       }),
+      invalidatesTags: ['EmailTemplate'],
     }),
 
     // Profile management endpoints
@@ -386,6 +416,7 @@ export const apiSlice = createApi({
 
 export const {
   useLoginWithEmailMutation,
+  useExchangeGoogleCodeMutation,
   useLoginWithGoogleMutation,
   useSignUpMutation,
   useDeleteUserMutation,

@@ -94,7 +94,7 @@ const CreateInvoice = () => {
                 Failed to load invoice: {fetchError.message}
               </div>
             ) : (
-              <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 shadow-md rounded px-8 pt-6 pb-8">
+              <form onSubmit={handleSubmit} className="bg-white dark:bg-gray-800 border border-lime-300 shadow-md rounded px-8 pt-6 pb-8">
                 {/* Form Fields */}
                 <div className="mb-4">
                   <label htmlFor="clientName" className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">

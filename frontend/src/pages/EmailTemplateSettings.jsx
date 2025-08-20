@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import { 
   useGetEmailTemplateQuery,
@@ -16,15 +16,144 @@ const EmailTemplateSettings = () => {
   const [customSubject, setCustomSubject] = useState('');
   const [customContent, setCustomContent] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
+  
+  // Ref to track if we're currently auto-saving to prevent infinite loops
+  const isAutoSavingRef = useRef(false);
+  // Ref to track the initial template data to compare against
+  const initialTemplateDataRef = useRef(null);
+  // Ref to track if the component has finished its initial setup
+  const hasInitializedRef = useRef(false);
+
+  // Calculate isEmailConfigured at the top level
+  const isEmailConfigured = mailConfig?.configured || false;
 
   // Update form when data loads
   useEffect(() => {
-    if (templateData) {
-      setUseCustomTemplate(templateData.useCustomTemplate || false);
+    if (templateData && !isLoading) {
+      console.log('Frontend: Loading template data:', {
+        rawTemplateData: templateData,
+        useCustomTemplate: templateData.useCustomTemplate,
+        typeOfUseCustomTemplate: typeof templateData.useCustomTemplate,
+        hasInitialized: hasInitializedRef.current,
+        isLoading
+      });
+      
+      const newTemplateState = Boolean(templateData.useCustomTemplate);
+      
+      // Always update the form state with the latest data
+      setUseCustomTemplate(newTemplateState);
       setCustomSubject(templateData.customSubject || '');
       setCustomContent(templateData.customContent || '');
+      
+      // Store initial data only once, when we haven't initialized yet
+      if (!hasInitializedRef.current) {
+        initialTemplateDataRef.current = {
+          useCustomTemplate: newTemplateState,
+          customSubject: templateData.customSubject || '',
+          customContent: templateData.customContent || ''
+        };
+        console.log('Setting initial template data (first time):', initialTemplateDataRef.current);
+        
+        // Mark as initialized after a short delay to ensure all state updates are complete
+        setTimeout(() => {
+          hasInitializedRef.current = true;
+          console.log('Component initialization completed');
+        }, 100);
+      } else {
+        // If we're already initialized, just update the initial reference to match current server state
+        // This handles cases where server data might have changed while we were away
+        console.log('Updating initial reference to match server state:', {
+          old: initialTemplateDataRef.current,
+          new: { useCustomTemplate: newTemplateState }
+        });
+        initialTemplateDataRef.current.useCustomTemplate = newTemplateState;
+        initialTemplateDataRef.current.customSubject = templateData.customSubject || '';
+        initialTemplateDataRef.current.customContent = templateData.customContent || '';
+      }
     }
-  }, [templateData]);
+  }, [templateData, isLoading]);
+
+  // DEBUG: Log button state
+  useEffect(() => {
+    console.log('=== BUTTON STATE DEBUG ===');
+    console.log('isEmailConfigured:', isEmailConfigured);
+    console.log('mailConfig:', mailConfig);
+    console.log('isProcessing:', isProcessing);
+    console.log('Button disabled:', isProcessing || !isEmailConfigured);
+    console.log('=== END BUTTON STATE DEBUG ===');
+  }, [isEmailConfigured, mailConfig, isProcessing]);
+
+  // Auto-save when useCustomTemplate changes (but not during initialization)
+  useEffect(() => {
+    console.log('Auto-save useEffect triggered:', {
+      useCustomTemplate,
+      hasInitialized: hasInitializedRef.current,
+      hasInitialData: !!initialTemplateDataRef.current,
+      isAutoSaving: isAutoSavingRef.current,
+      initialUseCustomTemplate: initialTemplateDataRef.current?.useCustomTemplate
+    });
+    
+    // Skip if component hasn't finished initializing
+    if (!hasInitializedRef.current) {
+      console.log('Skipping auto-save: Component not initialized yet');
+      return;
+    }
+    
+    // Skip if no initial data stored yet
+    if (!initialTemplateDataRef.current) {
+      console.log('Skipping auto-save: No initial data stored');
+      return;
+    }
+    
+    // Skip if we're currently auto-saving to prevent loops
+    if (isAutoSavingRef.current) {
+      console.log('Skipping auto-save: Currently auto-saving');
+      return;
+    }
+    
+    // Skip if the current state matches the initial loaded data (no change)
+    if (useCustomTemplate === initialTemplateDataRef.current.useCustomTemplate) {
+      console.log('Skipping auto-save: No change detected');
+      return;
+    }
+    
+    console.log('=== AUTO-SAVE CHECKBOX CHANGE ===');
+    console.log('Checkbox changed from', initialTemplateDataRef.current.useCustomTemplate, 'to', useCustomTemplate);
+    
+    // Auto-save the checkbox change
+    const autoSave = async () => {
+      isAutoSavingRef.current = true;
+      setIsProcessing(true);
+      try {
+        // For auto-save, only send the checkbox state and preserve existing content
+        const saveData = {
+          useCustomTemplate: Boolean(useCustomTemplate),
+          customSubject: customSubject || '',
+          customContent: customContent || ''
+        };
+        
+        console.log('Auto-saving template with data:', saveData);
+        const result = await updateTemplate(saveData).unwrap();
+        console.log('Auto-save result:', result);
+        
+        // Update the initial reference to the new saved state
+        initialTemplateDataRef.current.useCustomTemplate = Boolean(useCustomTemplate);
+        
+        // Show a subtle notification instead of alert
+        console.log('✅ Template preference saved automatically');
+      } catch (error) {
+        console.error('Auto-save error:', error);
+        // Revert the checkbox state on error
+        setUseCustomTemplate(initialTemplateDataRef.current.useCustomTemplate);
+        alert('Failed to save template preference: ' + (error.data?.message || error.message));
+      } finally {
+        setIsProcessing(false);
+        isAutoSavingRef.current = false;
+      }
+    };
+    
+    autoSave();
+  }, [useCustomTemplate, updateTemplate]);
 
   // Safe sanitization function
   const sanitizeHTML = (html) => {
@@ -38,19 +167,39 @@ const EmailTemplateSettings = () => {
     e.preventDefault();
     setIsProcessing(true);
     
+    console.log('=== FRONTEND FORM SUBMIT DEBUG ===');
+    console.log('Form submitted with state:');
+    console.log('- useCustomTemplate:', useCustomTemplate, typeof useCustomTemplate);
+    console.log('- customSubject:', customSubject);
+    console.log('- customContent:', customContent);
+    console.log('- isEmailConfigured:', isEmailConfigured);
+    console.log('- isProcessing:', isProcessing);
+    
     try {
-      await updateTemplate({
-        useCustomTemplate,
-        customSubject: useCustomTemplate ? customSubject : '',
-        customContent: useCustomTemplate ? customContent : ''
-      }).unwrap();
+      const templateData = {
+        useCustomTemplate: Boolean(useCustomTemplate),
+        customSubject: customSubject || '',
+        customContent: customContent || ''
+      };
       
-      alert('Email template updated successfully!');
-      refetch();
+      console.log('Frontend: Submitting email template update (subject/content only):', {
+        rawUseCustomTemplate: useCustomTemplate,
+        convertedUseCustomTemplate: Boolean(useCustomTemplate),
+        templateData
+      });
+      
+      console.log('About to call updateTemplate mutation...');
+      const result = await updateTemplate(templateData).unwrap();
+      console.log('Frontend: Update result:', result);
+      
+      alert('Email template content updated successfully!');
+      // Cache invalidation will automatically refetch the data
     } catch (error) {
+      console.error('Frontend: Update error:', error);
       alert('Error updating template: ' + (error.data?.message || error.message));
     } finally {
       setIsProcessing(false);
+      console.log('=== END FRONTEND FORM SUBMIT DEBUG ===');
     }
   };
 
@@ -70,8 +219,6 @@ const EmailTemplateSettings = () => {
       </DashboardLayout>
     );
   }
-
-  const isEmailConfigured = mailConfig?.configured || false;
 
   return (
     <DashboardLayout>
@@ -105,14 +252,25 @@ const EmailTemplateSettings = () => {
                     id="useCustomTemplate"
                     checked={useCustomTemplate}
                     onChange={(e) => setUseCustomTemplate(e.target.checked)}
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                    disabled={isProcessing}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                   />
                   <label htmlFor="useCustomTemplate" className="text-lg font-medium dark:text-white">
                     Use Custom Email Template
                   </label>
+                  {isProcessing && (
+                    <span className="text-sm text-blue-600 dark:text-blue-400 flex items-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Saving...
+                    </span>
+                  )}
                 </div>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">
                   Enable this to customize the subject and content of your reminder emails.
+                  {isProcessing ? ' Changes are being saved automatically...' : ' Changes are saved automatically when you toggle this setting.'}
                 </p>
               </div>
 
