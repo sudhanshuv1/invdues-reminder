@@ -1,0 +1,50 @@
+const serverless = require('serverless-http');
+const app = require('./app');
+
+// Create the serverless handler with enhanced error handling
+const handler = serverless(app, {
+  request: (request, event, context) => {
+    console.log('Lambda Request:', {
+      method: request.method,
+      url: request.url,
+      headers: request.headers,
+      body: request.body ? JSON.stringify(request.body).substring(0, 500) : 'No body'
+    });
+  },
+  response: (response, event, context) => {
+    console.log('Lambda Response:', {
+      statusCode: response.statusCode,
+      headers: response.headers
+    });
+    if (response.statusCode >= 400) {
+      console.error('Error Response Body:', response.body);
+    }
+  }
+});
+
+// Wrap with additional error handling
+module.exports.handler = async (event, context) => {
+  try {
+    console.log('Lambda Event:', JSON.stringify(event, null, 2));
+    const result = await handler(event, context);
+    console.log('Lambda Result:', JSON.stringify(result, null, 2));
+    return result;
+  } catch (error) {
+    console.error('Lambda Handler Error:', error);
+    console.error('Error Stack:', error.stack);
+    return {
+      statusCode: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET,HEAD,PUT,PATCH,POST,DELETE',
+        'Access-Control-Allow-Headers': 'Content-Type,Authorization'
+      },
+      body: JSON.stringify({
+        message: 'Internal Server Error',
+        error: process.env.NODE_ENV === 'development' ? error.message : 'Something went wrong',
+        timestamp: new Date().toISOString()
+      })
+    };
+  }
+};

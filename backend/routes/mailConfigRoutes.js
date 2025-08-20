@@ -5,7 +5,8 @@ const {
   configureSMTP, 
   removeMailConfig,
   getEmailTemplate,
-  updateEmailTemplate 
+  updateEmailTemplate,
+  debugEmailTemplate
 } = require('../controllers/mailConfigController');
 const verifyJWT = require('../middleware/verifyJWT');
 const router = express.Router();
@@ -30,5 +31,8 @@ router.get('/template', getEmailTemplate);
 
 // PUT /mail-config/template - Update email template
 router.put('/template', updateEmailTemplate);
+
+// GET /mail-config/debug-template - Debug email template (development only)
+router.get('/debug-template', debugEmailTemplate);
 
 module.exports = router;

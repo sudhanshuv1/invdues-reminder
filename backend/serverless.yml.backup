@@ -1,0 +1,124 @@
+# serverless.yml
+service: invdues-reminder-backend
+
+frameworkVersion: '3'
+
+provider:
+  name: aws
+  runtime: nodejs18.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  timeout: 30
+  memorySize: 512
+  environment:
+    NODE_ENV: production
+    # Database
+    MONGO_URI: ${env:MONGO_URI}
+    
+    # JWT Secrets  
+    ACCESS_TOKEN_SECRET: ${env:ACCESS_TOKEN_SECRET}
+    REFRESH_TOKEN_SECRET: ${env:REFRESH_TOKEN_SECRET}
+    
+    # Google OAuth
+    GOOGLE_CLIENT_ID: ${env:GOOGLE_CLIENT_ID}
+    GOOGLE_CLIENT_SECRET: ${env:GOOGLE_CLIENT_SECRET}
+    GOOGLE_EMAIL_CLIENT_ID: ${env:GOOGLE_EMAIL_CLIENT_ID}
+    GOOGLE_EMAIL_CLIENT_SECRET: ${env:GOOGLE_EMAIL_CLIENT_SECRET}
+    
+    # Razorpay
+    RAZORPAY_KEY_ID: ${env:RAZORPAY_KEY_ID}
+    RAZORPAY_KEY_SECRET: ${env:RAZORPAY_KEY_SECRET}
+    RAZORPAY_WEBHOOK_SECRET: ${env:RAZORPAY_WEBHOOK_SECRET}
+    
+    # URLs
+    FRONTEND_URL: ${env:FRONTEND_URL}
+    ZAPIER_CLIENT_ID: ${env:ZAPIER_CLIENT_ID}
+    ZAPIER_CLIENT_SECRET: ${env:ZAPIER_CLIENT_SECRET}
+    ZAPIER_WEBHOOK_URL: ${env:ZAPIER_WEBHOOK_URL}
+    AUTHORIZED_REDIRECT_URIS: ${env:AUTHORIZED_REDIRECT_URIS}
+    ENCRYPTION_KEY: ${env:ENCRYPTION_KEY}
+    
+  httpApi:
+    cors:
+      allowedOrigins:
+        - 'http://localhost:5173'
+        - 'https://invdues-reminder-eta.vercel.app'
+      allowedHeaders:
+        - Content-Type
+        - Authorization
+        - X-Amz-Date
+        - X-Api-Key
+        - X-Amz-Security-Token
+        - X-Amz-User-Agent
+      allowedMethods:
+        - GET
+        - POST
+        - PUT
+        - PATCH
+        - DELETE
+        - OPTIONS
+      allowCredentials: true
+
+functions:
+  # Main API function
+  api:
+    handler: lambda.handler
+    events:
+      - httpApi:
+          path: /{proxy+}
+          method: ANY
+      - httpApi:
+          path: /
+          method: ANY
+
+  # Only the reminder scheduler (removed webhook and zapier schedulers)
+  reminderScheduler:
+    handler: scheduler.reminderScheduler
+    events:
+      - schedule:
+          rate: rate(1 hour)
+          description: "Send periodic invoice reminders"
+    timeout: 60
+
+plugins:
+  - serverless-offline
+
+custom:
+  serverless-offline:
+    httpPort: 5000
+    noPrependStageInUrl: true
+
+package:
+  patterns:
+    # Include only essential files
+    - '*.js'
+    - 'controllers/**'
+    - 'middleware/**'
+    - 'models/**'
+    - 'routes/**'
+    - 'utils/**'
+    - 'config/**'
+    - 'package.json'
+    
+    # Exclude everything else to reduce size
+    - '!node_modules/.cache/**'
+    - '!node_modules/aws-sdk/**'  # AWS SDK is provided by Lambda
+    - '!node_modules/@types/**'   # TypeScript definitions not needed
+    - '!node_modules/typescript/**' # TypeScript compiler not needed
+    - '!.git/**'
+    - '!.vscode/**'
+    - '!.serverless/**'
+    - '!tests/**'
+    - '!*.md'
+    - '!.env*'
+    - '!logs/**'
+    - '!*.log'
+    - '!coverage/**'
+    - '!.nyc_output/**'
+    - '!docs/**'
+    - '!examples/**'
+    - '!*.test.js'
+    - '!*.spec.js'
+    - '!ENV_GUIDE.md'
+    - '!LAMBDA_DEPLOYMENT.md'
+    - '!LAMBDA_SETUP_COMPLETE.md'

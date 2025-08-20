@@ -1,0 +1,32 @@
+# Serverless deployment exclusions
+.git/
+.vscode/
+.serverless/
+tests/
+*.md
+.env*
+logs/
+*.log
+coverage/
+.nyc_output/
+docs/
+examples/
+*.test.js
+*.spec.js
+deploy.sh
+ENV_GUIDE.md
+LAMBDA_DEPLOYMENT.md
+LAMBDA_SETUP_COMPLETE.md
+
+# Node modules to exclude (these are large)
+node_modules/.cache/
+node_modules/aws-sdk/
+node_modules/@types/
+node_modules/typescript/
+
+# Development files
+nodemon.json
+.eslintrc*
+.prettierrc*
+jest.config*
+vitest.config*
