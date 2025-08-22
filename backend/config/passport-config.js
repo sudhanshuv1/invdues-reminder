@@ -4,6 +4,14 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcrypt');
 const User = require('../models/User');
 
+// Determine the callback URL based on environment
+const getCallbackURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return 'https://invdues-backend.onrender.com/auth/google/callback';
+  }
+  return 'http://localhost:5000/auth/google/callback';
+};
+
 // Local Strategy for email and password login
 passport.use(
   new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
@@ -39,26 +47,47 @@ passport.use(
     {
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: `${process.env.BACKEND_URL}/auth/google/callback`, // Ensure this matches your Google Developer Console settings
+      callbackURL: getCallbackURL(),
+      scope: ['profile', 'email']
     },
     async (accessToken, refreshToken, profile, done) => {
       try {
-        // Check if a user with the Google ID already exists
-        let user = await User.findOne({ googleId: profile.id });
+        console.log('=== GOOGLE STRATEGY CALLBACK ===');
+        console.log('Profile received:', {
+          id: profile.id,
+          email: profile.emails?.[0]?.value,
+          name: profile.displayName
+        });
 
-        // If no user exists, create a new one
-        if (!user) {
+        // Check if a user with the Google ID already exists
+        let user = await User.findOne({ 
+          $or: [
+            { googleId: profile.id },
+            { email: profile.emails[0].value }
+          ]
+        });
+
+        if (user) {
+          // Update existing user with Google ID if not set
+          if (!user.googleId) {
+            user.googleId = profile.id;
+            await user.save();
+          }
+          console.log('Existing user found:', user.email);
+          return done(null, user);
+        } else {
+          // Create new user
           user = await User.create({
             googleId: profile.id,
             displayName: profile.displayName,
             email: profile.emails[0].value,
-            profilePhoto: profile.photos[0]?.value, // Optional profile photo
+            profilePhoto: profile.photos[0]?.value,
           });
+          console.log('New user created:', user.email);
+          return done(null, user);
         }
-
-        
-        return done(null, user);
       } catch (error) {
+        console.error('Google Strategy error:', error);
         return done(error);
       }
     }
@@ -67,15 +96,18 @@ passport.use(
 
 // Serialize user to store in session (if sessions are used)
 passport.serializeUser((user, done) => {
+  console.log('Serializing user:', user.id);
   done(null, user.id);
 });
 
 // Deserialize user from session (if sessions are used)
 passport.deserializeUser(async (id, done) => {
   try {
+    console.log('Deserializing user ID:', id);
     const user = await User.findById(id);
     done(null, user);
   } catch (error) {
+    console.error('Deserialize error:', error);
     done(error);
   }
 });

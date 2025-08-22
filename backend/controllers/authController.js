@@ -52,50 +52,75 @@ const loginWithEmail = async (req, res) => {
 // @access Public
 const loginWithGoogle = async (req, res) => {
     try {
-      const user = req.user; // Passport attaches the authenticated user to req.user
-  
-      const payload = {
-        User: {
-          id: user.id,
-          email: user.email,
-        },
-      };
-  
-      const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '15m' });
-      const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { expiresIn: '7d' });
-  
-      // Set the refresh token as an HTTP-only cookie
-      res.cookie('refreshToken', refreshToken, {
-        httpOnly: true,
-        sameSite: 'None',
-        secure: true,
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-      });
-  
-      // Redirect to the frontend with the access token
-     res.redirect(`${process.env.FRONTEND_URL}/signin?accessToken=${accessToken}&name=${encodeURIComponent(user.displayName)}`);
-     
+        console.log('=== LOGIN WITH GOOGLE CONTROLLER ===');
+        console.log('User from passport:', req.user ? 'User present' : 'No user');
+        
+        const user = req.user;
+        
+        if (!user) {
+            console.error('No user found in req.user after passport authentication');
+            return res.redirect(`${process.env.FRONTEND_URL}/signin?error=no_user_data`);
+        }
 
-    // Option 1: Set access token and user info as cookies (recommended for security)
-    // res.cookie('accessToken', accessToken, {
-    //     httpOnly: true,
-    //     sameSite: 'None',
-    //     secure: true,
-    //     maxAge: 15 * 60 * 1000, // 15 minutes
-    // });
-    // res.cookie('userName', encodeURIComponent(user.displayName), {
-    //     httpOnly: false, // Can be accessed by frontend JS if needed
-    //     sameSite: 'None',
-    //     secure: true,
-    //     maxAge: 15 * 60 * 1000,
-    // });
-    // res.redirect(process.env.FRONTEND_URL + '/signin');
+        console.log('User data:', {
+            id: user.id,
+            email: user.email,
+            displayName: user.displayName
+        });
 
-    // // Option 2: Redirect and let frontend fetch user info via API using the refresh token cookie
-    // // res.redirect(process.env.FRONTEND_URL + '/signin');
+        const payload = {
+            User: {
+                id: user.id,
+                email: user.email,
+            },
+        };
+
+        const accessToken = jwt.sign(payload, process.env.ACCESS_TOKEN_SECRET, { 
+            expiresIn: '15m' 
+        });
+        
+        const refreshToken = jwt.sign(payload, process.env.REFRESH_TOKEN_SECRET, { 
+            expiresIn: '7d' 
+        });
+
+        console.log('JWT tokens generated successfully');
+
+        // Set cookies
+        const isProduction = process.env.NODE_ENV === 'production';
+        
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Lax',
+            maxAge: 7 * 24 * 60 * 60 * 1000,
+        });
+
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: isProduction,
+            sameSite: isProduction ? 'None' : 'Lax',
+            maxAge: 15 * 60 * 1000,
+        });
+
+        console.log('Cookies set successfully');
+
+        // Redirect to frontend with tokens
+        const frontendUrl = process.env.FRONTEND_URL;
+        const redirectUrl = `${frontendUrl}/signin?` +
+            `accessToken=${encodeURIComponent(accessToken)}&` +
+            `refreshToken=${encodeURIComponent(refreshToken)}&` +
+            `name=${encodeURIComponent(user.displayName || '')}&` +
+            `email=${encodeURIComponent(user.email || '')}&` +
+            `success=true`;
+
+        console.log('Redirecting to frontend...');
+        res.redirect(redirectUrl);
 
     } catch (error) {
-      res.status(500).json({ message: 'Internal server error', error });
+        console.error('=== LOGIN WITH GOOGLE ERROR ===');
+        console.error('Error details:', error);
+        console.error('Error stack:', error.stack);
+        res.redirect(`${process.env.FRONTEND_URL}/signin?error=server_error&details=${encodeURIComponent(error.message)}`);
     }
 };
 

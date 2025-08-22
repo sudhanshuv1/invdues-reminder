@@ -8,13 +8,9 @@ const cookieParser = require('cookie-parser');
 const path = require('path');
 
 const corsOptions = require('./config/corsOptions');
-const corsMiddleware = require('./middleware/corsMiddleware');
 const dbConnect = require('./config/dbConnect');
 
 const app = express();
-
-// Use comprehensive CORS middleware first
-app.use(corsMiddleware);
 
 // Enable CORS using your custom options.
 app.use(cors(corsOptions));
@@ -64,7 +60,8 @@ app.use((error, req, res, next) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
     'http://localhost:5173',
-    'https://invdues-reminder-eta.vercel.app'
+    'https://invdues-reminder-eta.vercel.app',
+    'https://invdues-reminder.vercel.app'
   ];
 
   if (allowedOrigins.includes(origin)) {
@@ -101,7 +98,8 @@ app.use((req, res) => {
   const origin = req.headers.origin;
   const allowedOrigins = [
     'http://localhost:5173',
-    'https://invdues-reminder-eta.vercel.app'
+    'https://invdues-reminder-eta.vercel.app',
+    'https://invdues-reminder.vercel.app'
   ];
 
   if (allowedOrigins.includes(origin)) {
